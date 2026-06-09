@@ -1,6 +1,6 @@
-# Verizon AI Signature Program Platform
+# Participant Operating Platform
 
-Static simulated project platform for operating the Verizon AI Signature Program.
+Static participant dashboard for operating the Verizon AI Signature Program simulation.
 
 Open locally:
 
