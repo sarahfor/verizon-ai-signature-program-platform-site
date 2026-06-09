@@ -1,4 +1,4 @@
-# Participant Operating Platform
+# Participant Dashboard
 
 Static participant dashboard for operating the Verizon AI Signature Program simulation.
 
