@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Verizon AI Signature Program Platform</title>
+    <link rel="stylesheet" href="./styles.css?v=storyboard-style" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">V</div>
+          <div>
+            <div class="brand-name">AI Signature</div>
+            <div class="brand-sub">Program Ops</div>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Primary">
+          <button class="nav-item active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
+          <button class="nav-item" data-view="assignments"><i data-lucide="clipboard-list"></i><span>Assignments</span></button>
+          <button class="nav-item" data-view="plan"><i data-lucide="file-check-2"></i><span>Testing Plan</span></button>
+          <button class="nav-item" data-view="sandbox"><i data-lucide="box"></i><span>Sandbox</span></button>
+          <button class="nav-item" data-view="outcomes"><i data-lucide="chart-no-axes-combined"></i><span>Outcomes</span></button>
+        </nav>
+
+        <div class="cohort-card">
+          <div class="small-label">Cohort Status</div>
+          <div class="status-row">
+            <span class="status-dot"></span>
+            <strong id="gateStatus">Week 3 gate pending</strong>
+          </div>
+          <div class="progress-track"><div id="overallProgress" class="progress-fill"></div></div>
+          <div class="meta-grid">
+            <span>Week</span><strong id="currentWeek">3</strong>
+            <span>Artifacts</span><strong id="artifactCount">0/7</strong>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Verizon AI Signature Program</p>
+            <h1>Participant Operating Platform</h1>
+          </div>
+          <div class="top-actions">
+            <button id="continueParticipantBtn" class="icon-btn"><i data-lucide="arrow-right-circle"></i><span>Continue</span></button>
+            <button id="loadSampleBtn" class="icon-btn"><i data-lucide="wand-sparkles"></i><span>Load Sample</span></button>
+            <button id="resetBtn" class="icon-btn secondary"><i data-lucide="rotate-ccw"></i><span>Reset</span></button>
+          </div>
+        </header>
+
+        <section id="dashboard" class="view active">
+          <div class="dashboard-grid">
+            <section class="panel participant-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Business Profile</p>
+                  <h2>Participant workspace</h2>
+                </div>
+                <span class="badge" id="laneBadge">Lane unassigned</span>
+              </div>
+              <div class="field-grid two">
+                <label>Business name<input id="businessName" data-state="businessName" placeholder="Northstar Services" /></label>
+                <label>Primary participant<input id="participantName" data-state="participantName" placeholder="Avery Lee" /></label>
+                <label>Team size<input id="teamSize" data-state="teamSize" placeholder="14" /></label>
+                <label>Monthly software budget<input id="budget" data-state="budget" placeholder="$250" /></label>
+                <label class="wide">Workflow lane
+                  <select id="workflowLane" data-state="workflowLane">
+                    <option value="">Select lane</option>
+                    <option>Growth, Content, and Demand</option>
+                    <option>Revenue Response and Client Conversion</option>
+                    <option>Operations and Process Reliability</option>
+                    <option>Insights and Decision Support</option>
+                  </select>
+                </label>
+                <label class="wide">Selected workflow<input id="workflowName" data-state="workflowName" placeholder="Lead follow-up and proposal drafting" /></label>
+              </div>
+            </section>
+
+            <section class="panel gate-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Readiness Gates</p>
+                  <h2>Pass criteria</h2>
+                </div>
+              </div>
+              <div class="gate-list" id="gateList"></div>
+            </section>
+
+            <section class="panel journey-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Journey</p>
+                  <h2>Workflow-to-pilot path</h2>
+                </div>
+              </div>
+              <div class="journey" id="journey"></div>
+            </section>
+
+            <section class="panel guide-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Participant Mode</p>
+                  <h2>Run-through guide</h2>
+                </div>
+                <button id="guideNextBtn" class="icon-btn"><i data-lucide="arrow-right"></i><span>Next</span></button>
+              </div>
+              <div id="participantGuide" class="participant-guide"></div>
+            </section>
+
+            <section class="panel artifact-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Artifacts</p>
+                  <h2>Generated packet</h2>
+                </div>
+              </div>
+              <div class="artifact-stack">
+                <div><span>Workflow card</span><strong id="workflowCardStatus">Incomplete</strong></div>
+                <div><span>Data boundary</span><strong id="dataStatus">Incomplete</strong></div>
+                <div><span>Test packet</span><strong id="testStatus">Incomplete</strong></div>
+                <div><span>Assistant instructions</span><strong id="assistantStatus">Incomplete</strong></div>
+                <div><span>Risk controls</span><strong id="riskStatus">Incomplete</strong></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="assignments" class="view">
+          <div class="split-layout">
+            <section class="panel form-panel">
+              <div class="panel-head sticky">
+                <div>
+                  <p class="eyebrow">Assignments</p>
+                  <h2>Fillable implementation forms</h2>
+                </div>
+                <button id="generatePlanBtn" class="icon-btn"><i data-lucide="file-output"></i><span>Generate Plan</span></button>
+              </div>
+
+              <div class="assignment-tabs" id="assignmentTabs"></div>
+              <div id="assignmentForm" class="assignment-form"></div>
+            </section>
+
+            <aside class="panel preview-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Live Artifact</p>
+                  <h2>Workflow card</h2>
+                </div>
+              </div>
+              <div id="workflowCard" class="workflow-card"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="plan" class="view">
+          <div class="plan-grid">
+            <section class="panel plan-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Generated Artifact</p>
+                  <h2>Sandbox testing plan</h2>
+                </div>
+                <div class="top-actions">
+                  <button id="copyPlanBtn" class="icon-btn secondary"><i data-lucide="copy"></i><span>Copy</span></button>
+                  <button id="downloadPlanBtn" class="icon-btn"><i data-lucide="download"></i><span>Download</span></button>
+                </div>
+              </div>
+              <div id="testingPlan" class="generated-doc"></div>
+            </section>
+
+            <aside class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Gate Decision</p>
+                  <h2>Sandbox readiness</h2>
+                </div>
+              </div>
+              <div id="readinessMeter" class="readiness-meter"></div>
+              <div id="missingItems" class="missing-list"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="sandbox" class="view">
+          <div class="sandbox-layout">
+            <section class="panel builder-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Sandbox Environment</p>
+                  <h2>Build workspace</h2>
+                </div>
+                <button id="runTestBtn" class="icon-btn"><i data-lucide="play"></i><span>Run Test</span></button>
+              </div>
+
+              <div class="builder-tabs">
+                <button class="builder-tab active" data-builder="assistant">Assistant</button>
+                <button class="builder-tab" data-builder="agent">Agent</button>
+                <button class="builder-tab" data-builder="automation">Automation</button>
+                <button class="builder-tab" data-builder="review">Review</button>
+              </div>
+
+              <div id="builderContent" class="builder-content"></div>
+            </section>
+
+            <aside class="panel run-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Test Runner</p>
+                  <h2>Output review</h2>
+                </div>
+              </div>
+              <div id="testRunner" class="test-runner"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="outcomes" class="view">
+          <div class="outcome-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Measurement</p>
+                  <h2>KPI tracker</h2>
+                </div>
+              </div>
+              <div class="kpi-list" id="kpiList"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Capstone</p>
+                  <h2>Final packet builder</h2>
+                </div>
+              </div>
+              <div id="packetBuilder" class="packet-builder"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="fieldTemplate">
+      <label class="form-field">
+        <span></span>
+        <input />
+      </label>
+    </template>
+
+    <script src="./app.js?v=participant-flow"></script>
+  </body>
+</html>
