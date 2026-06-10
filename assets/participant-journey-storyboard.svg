@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3200" height="1800" viewBox="0 0 3200 1800">
+  <defs>
+    <style>
+      .bg { fill: #f7f7f7; }
+      .card { fill: #ffffff; stroke: #d6d6d6; stroke-width: 3; }
+      .soft { fill: #f2f2f2; stroke: #d6d6d6; stroke-width: 3; }
+      .redsoft { fill: #fff2f2; stroke: #d60000; stroke-width: 4; }
+      .black { fill: #111111; }
+      .red { fill: #d60000; }
+      .text { fill: #111111; font-family: Inter, Arial, sans-serif; }
+      .muted { fill: #5d5d5d; font-family: Inter, Arial, sans-serif; }
+      .label { fill: #d60000; font-family: Inter, Arial, sans-serif; font-weight: 800; letter-spacing: 1px; }
+      .h1 { font-size: 76px; font-weight: 900; }
+      .h2 { font-size: 38px; font-weight: 900; }
+      .h3 { font-size: 30px; font-weight: 900; }
+      .body { font-size: 24px; line-height: 1.35; }
+      .small { font-size: 20px; }
+      .white { fill: #ffffff; font-family: Inter, Arial, sans-serif; font-weight: 800; }
+      .line { stroke: #111111; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10" fill="none" stroke="#111111" stroke-width="2"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="3200" height="1800"/>
+
+  <text x="110" y="95" class="label" font-size="30">VERIZON AI SIGNATURE PROGRAM</text>
+  <text x="110" y="175" class="text h1">Participant Journey Storyboard</text>
+  <text x="112" y="230" class="muted body">Product team view of how an SMB participant moves from an unclear AI idea to a scoped workflow, sandbox evidence, and pilot-ready operating packet.</text>
+  <rect x="2410" y="75" width="610" height="126" rx="36" class="black"/>
+  <text x="2485" y="128" class="white" font-size="27">Product team artifact</text>
+  <text x="2485" y="166" class="white" font-size="22">No-talking demo narrative</text>
+
+  <rect x="105" y="310" width="900" height="290" rx="18" class="redsoft"/>
+  <text x="150" y="370" class="label" font-size="24">DEMO PERSONA</text>
+  <text x="150" y="425" class="text h2">Commercial cleaning SMB</text>
+  <text x="150" y="475" class="muted body">12-person facilities services company.</text>
+  <text x="150" y="510" class="muted body">Owner and office manager are losing qualified leads because</text>
+  <text x="150" y="545" class="muted body">proposals and second follow-ups are slow and inconsistent.</text>
+
+  <rect x="1045" y="310" width="900" height="290" rx="18" class="card"/>
+  <text x="1090" y="370" class="label" font-size="24">STORY ARC</text>
+  <text x="1090" y="425" class="text h2">From bottleneck to evidence</text>
+  <text x="1090" y="475" class="muted body">Start with one real workflow. Define the boundary.</text>
+  <text x="1090" y="510" class="muted body">Test messy cases. Package the proof and controls.</text>
+  <text x="1090" y="545" class="muted body">Decide whether the workflow is ready for a small pilot.</text>
+
+  <rect x="1985" y="310" width="900" height="290" rx="18" class="card"/>
+  <text x="2030" y="370" class="label" font-size="24">READINESS LOGIC</text>
+  <text x="2030" y="425" class="text h2">Completion-based signal</text>
+  <text x="2030" y="475" class="muted body">Score rises as required fields are filled and gates pass:</text>
+  <text x="2030" y="510" class="muted body">workflow, owner, reviewer, baseline metric, source of truth,</text>
+  <text x="2030" y="545" class="muted body">data boundary, and stop condition.</text>
+
+  <text x="110" y="710" class="label" font-size="28">PARTICIPANT PATH</text>
+  <text x="110" y="770" class="text h2">Six story moments the product team should watch</text>
+
+  <g id="steps">
+    <rect x="110" y="835" width="430" height="360" rx="18" class="redsoft"/>
+    <circle cx="165" cy="905" r="39" class="red"/>
+    <text x="152" y="918" class="white" font-size="36">1</text>
+    <text x="145" y="995" class="text h3">Profile</text>
+    <text x="145" y="1040" class="muted small">Participant enters business</text>
+    <text x="145" y="1070" class="muted small">context, team size, budget,</text>
+    <text x="145" y="1100" class="muted small">lane, and selected workflow.</text>
+    <text x="145" y="1160" class="text small" font-weight="800">Product lens: setup, not survey.</text>
+
+    <rect x="595" y="835" width="430" height="360" rx="18" class="soft"/>
+    <circle cx="650" cy="905" r="39" class="black"/>
+    <text x="637" y="918" class="white" font-size="36">2</text>
+    <text x="630" y="995" class="text h3">Workflow Brief</text>
+    <text x="630" y="1040" class="muted small">Goal, trigger, input, output,</text>
+    <text x="630" y="1070" class="muted small">owner, reviewer, and</text>
+    <text x="630" y="1100" class="muted small">baseline metric.</text>
+    <text x="630" y="1160" class="text small" font-weight="800">Product lens: narrow the scope.</text>
+
+    <rect x="1080" y="835" width="430" height="360" rx="18" class="soft"/>
+    <circle cx="1135" cy="905" r="39" class="black"/>
+    <text x="1122" y="918" class="white" font-size="36">3</text>
+    <text x="1115" y="995" class="text h3">Data Boundary</text>
+    <text x="1115" y="1040" class="muted small">Source of truth, allowed data,</text>
+    <text x="1115" y="1070" class="muted small">blocked data, tool route,</text>
+    <text x="1115" y="1100" class="muted small">budget owner, and cost.</text>
+    <text x="1115" y="1160" class="text small" font-weight="800">Product lens: safety before tests.</text>
+
+    <rect x="1565" y="835" width="430" height="360" rx="18" class="soft"/>
+    <circle cx="1620" cy="905" r="39" class="black"/>
+    <text x="1607" y="918" class="white" font-size="36">4</text>
+    <text x="1600" y="995" class="text h3">Test Packet</text>
+    <text x="1600" y="1040" class="muted small">Three messy cases, desired</text>
+    <text x="1600" y="1070" class="muted small">format, edge cases, and</text>
+    <text x="1600" y="1100" class="muted small">stop conditions.</text>
+    <text x="1600" y="1160" class="text small" font-weight="800">Product lens: test reality.</text>
+
+    <rect x="2050" y="835" width="430" height="360" rx="18" class="soft"/>
+    <circle cx="2105" cy="905" r="39" class="black"/>
+    <text x="2092" y="918" class="white" font-size="36">5</text>
+    <text x="2085" y="995" class="text h3">Controls</text>
+    <text x="2085" y="1040" class="muted small">Assistant rules, review rubric,</text>
+    <text x="2085" y="1070" class="muted small">risk controls, privacy rules,</text>
+    <text x="2085" y="1100" class="muted small">and go/no-go criteria.</text>
+    <text x="2085" y="1160" class="text small" font-weight="800">Product lens: governance as work.</text>
+
+    <rect x="2535" y="835" width="430" height="360" rx="18" class="soft"/>
+    <circle cx="2590" cy="905" r="39" class="black"/>
+    <text x="2577" y="918" class="white" font-size="36">6</text>
+    <text x="2570" y="995" class="text h3">Pilot Packet</text>
+    <text x="2570" y="1040" class="muted small">Sandbox results, KPIs,</text>
+    <text x="2570" y="1070" class="muted small">monitoring log, final controls,</text>
+    <text x="2570" y="1100" class="muted small">and post-pilot decision.</text>
+    <text x="2570" y="1160" class="text small" font-weight="800">Product lens: shareable evidence.</text>
+  </g>
+
+  <path d="M540 1015 H595" class="line"/>
+  <path d="M1025 1015 H1080" class="line"/>
+  <path d="M1510 1015 H1565" class="line"/>
+  <path d="M1995 1015 H2050" class="line"/>
+  <path d="M2480 1015 H2535" class="line"/>
+
+  <text x="110" y="1325" class="label" font-size="28">PRODUCT TEAM READOUT</text>
+  <rect x="110" y="1380" width="690" height="275" rx="18" class="card"/>
+  <text x="150" y="1440" class="text h3">Participant pain points</text>
+  <text x="150" y="1495" class="muted body">Unclear starting point</text>
+  <text x="150" y="1530" class="muted body">Owner bottleneck</text>
+  <text x="150" y="1565" class="muted body">Fear of risky automation</text>
+  <text x="150" y="1600" class="muted body">Hard to write realistic tests</text>
+
+  <rect x="850" y="1380" width="690" height="275" rx="18" class="card"/>
+  <text x="890" y="1440" class="text h3">Platform moments</text>
+  <text x="890" y="1495" class="muted body">Guided next step</text>
+  <text x="890" y="1530" class="muted body">Readiness gates</text>
+  <text x="890" y="1565" class="muted body">Assignment forms</text>
+  <text x="890" y="1600" class="muted body">Sandbox test runner</text>
+
+  <rect x="1590" y="1380" width="690" height="275" rx="18" class="card"/>
+  <text x="1630" y="1440" class="text h3">Product opportunities</text>
+  <text x="1630" y="1495" class="muted body">Explain score changes</text>
+  <text x="1630" y="1530" class="muted body">Add contextual examples</text>
+  <text x="1630" y="1565" class="muted body">Show missing gate checklist</text>
+  <text x="1630" y="1600" class="muted body">Make export/share clearer</text>
+
+  <rect x="2330" y="1380" width="690" height="275" rx="18" class="card"/>
+  <text x="2370" y="1440" class="text h3">Success signals</text>
+  <text x="2370" y="1495" class="muted body">One workflow selected</text>
+  <text x="2370" y="1530" class="muted body">Seven gates pass</text>
+  <text x="2370" y="1565" class="muted body">Three tests run</text>
+  <text x="2370" y="1600" class="muted body">Pilot decision captured</text>
+</svg>
