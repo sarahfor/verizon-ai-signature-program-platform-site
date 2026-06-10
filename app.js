@@ -104,6 +104,15 @@ const initialState = {
   activeScenario: "testCase1",
   selectedTaxonomyLane: "",
   selectedTaxonomyWorkflow: "",
+  workflowFitAnswers: {
+    objective: "",
+    systems: "",
+    dataAccess: "",
+    reviewer: "",
+    risk: "",
+    change: "",
+  },
+  recommendedTaxonomyWorkflow: "",
   runCount: 0,
   runLog: [],
 };
@@ -336,11 +345,146 @@ function selectedLaneSummary(lane) {
   return taxonomyData.lanes.find((item) => item.lane === lane);
 }
 
+const workflowFitQuestions = [
+  {
+    key: "objective",
+    label: "What improvement matters most?",
+    options: [
+      ["", "Select one"],
+      ["demand", "Create more demand or marketing output"],
+      ["revenue", "Respond to leads and convert customers faster"],
+      ["operations", "Make internal work more repeatable"],
+      ["insights", "Make decisions with better reporting or visibility"],
+    ],
+  },
+  {
+    key: "systems",
+    label: "Where does the work live today?",
+    options: [
+      ["", "Select one"],
+      ["content", "Docs, website, email, social, or marketing tools"],
+      ["crm", "CRM, email, SMS, forms, or sales notes"],
+      ["ops", "Project tools, shared files, SOPs, scheduling, invoices"],
+      ["data", "Spreadsheets, reports, dashboards, analytics, finance data"],
+      ["manual", "Mostly manual or in people's heads"],
+    ],
+  },
+  {
+    key: "dataAccess",
+    label: "How easy is the information to access?",
+    options: [
+      ["", "Select one"],
+      ["easy", "Easy: organized and easy to find"],
+      ["some", "Somewhat easy: exists but takes time"],
+      ["hard", "Difficult: spread across tools or people"],
+      ["head", "Mostly in someone's head"],
+    ],
+  },
+  {
+    key: "reviewer",
+    label: "Who can review AI output?",
+    options: [
+      ["", "Select one"],
+      ["named", "Named owner or department lead"],
+      ["team", "Customer-facing or operations team member"],
+      ["external", "External advisor or consultant"],
+      ["none", "No reviewer identified yet"],
+    ],
+  },
+  {
+    key: "risk",
+    label: "What is the highest-risk output?",
+    options: [
+      ["", "Select one"],
+      ["low", "Internal draft, summary, or content"],
+      ["customer", "Customer-facing message or proposal"],
+      ["financial", "Pricing, financial, private, or contractual info"],
+      ["regulated", "Legal, medical, hiring, safety, or autonomous decisioning"],
+    ],
+  },
+  {
+    key: "change",
+    label: "How much team behavior must change?",
+    options: [
+      ["", "Select one"],
+      ["little", "Very little"],
+      ["some", "Some habits or steps"],
+      ["several", "Several roles, handoffs, or tools"],
+      ["major", "Major change across the team"],
+    ],
+  },
+];
+
 function priorityBand(score) {
   if (score >= 80) return "Default first-cohort";
   if (score >= 65) return "Selective first-cohort";
   if (score >= 50) return "Clinic / later cohort";
   return "Exclude by default";
+}
+
+function laneFromAnswers(answers = state.workflowFitAnswers || {}) {
+  const objectiveMap = {
+    demand: "Growth, Content, and Demand",
+    revenue: "Revenue Response and Client Conversion",
+    operations: "Operations and Process Reliability",
+    insights: "Insights and Decision Support",
+  };
+  const systemMap = {
+    content: "Growth, Content, and Demand",
+    crm: "Revenue Response and Client Conversion",
+    ops: "Operations and Process Reliability",
+    data: "Insights and Decision Support",
+  };
+  return objectiveMap[answers.objective] || systemMap[answers.systems] || state.selectedTaxonomyLane || "";
+}
+
+function fitPenalty(item, answers = state.workflowFitAnswers || {}) {
+  let penalty = 0;
+  if (answers.dataAccess === "hard") penalty += item.readiness < 3.5 ? 8 : 3;
+  if (answers.dataAccess === "head") penalty += item.readiness < 4 ? 14 : 6;
+  if (answers.reviewer === "none") penalty += item.risk >= 3 ? 18 : 8;
+  if (answers.risk === "customer") penalty += item.risk >= 3.5 ? 10 : 0;
+  if (answers.risk === "financial") penalty += item.risk >= 3 ? 16 : 6;
+  if (answers.risk === "regulated") penalty += 40;
+  if (answers.change === "several") penalty += item.complexity >= 3 ? 10 : 3;
+  if (answers.change === "major") penalty += item.complexity >= 2.5 ? 18 : 8;
+  if (answers.systems === "manual") penalty += item.complexity >= 3 ? 12 : 4;
+  return penalty;
+}
+
+function workflowFitScore(item, answers = state.workflowFitAnswers || {}) {
+  const targetLane = laneFromAnswers(answers);
+  let boost = item.lane === targetLane ? 12 : 0;
+  if (answers.dataAccess === "easy" && item.readiness >= 4) boost += 4;
+  if (answers.reviewer && answers.reviewer !== "none" && item.risk <= 2.5) boost += 3;
+  if (answers.change === "little" && item.complexity <= 2) boost += 4;
+  if (answers.systems === "crm" && /CRM|email|SMS|forms/i.test(item.baseline + " " + item.stack)) boost += 4;
+  if (answers.systems === "content" && /CMS|email|social|Canva|Shopify|website/i.test(item.baseline + " " + item.stack)) boost += 4;
+  if (answers.systems === "ops" && /project|shared|SOP|invoice|scheduling|docs/i.test(item.baseline + " " + item.workflow)) boost += 4;
+  if (answers.systems === "data" && /spreadsheet|dashboard|analytics|report|finance/i.test(item.baseline + " " + item.workflow)) boost += 4;
+  return Math.min(100, Math.max(0, Math.round(item.score + boost - fitPenalty(item, answers))));
+}
+
+function workflowFitRecommendation() {
+  const answers = state.workflowFitAnswers || {};
+  if (!Object.values(answers).some(Boolean)) return null;
+  return taxonomyData.workflows
+    .filter((item) => item.lane !== "OUT OF SCOPE")
+    .map((item) => ({ ...item, fitScore: workflowFitScore(item, answers) }))
+    .sort((a, b) => b.fitScore - a.fitScore || b.score - a.score || a.complexity - b.complexity)[0];
+}
+
+function assignmentExplainerFor(item = selectedTaxonomyWorkflow()) {
+  if (!item) return [];
+  return [
+    ["Workflow Brief", `Define the exact ${item.workflow} process, owner, reviewer, input, output, and baseline metric. This keeps the pilot focused on one workflow instead of a broad AI idea.`],
+    ["Data Boundary", `List the systems and source material that support this workflow: ${item.baseline}. Also name what is off-limits before sandbox testing.`],
+    ["Test Packet", `Build three messy scenarios from the pain pattern: ${item.pain}. Include edge cases and stop conditions.`],
+    ["Assistant", `Turn the representative AI use into instructions: ${item.useCases}. The assistant should support the work, not make final decisions.`],
+    ["Review Rubric", `Use these guardrails as the first review standard: ${item.guardrails}. Add accuracy, completeness, tone, and escalation checks.`],
+    ["Risk Controls", `Score risk at ${item.risk}/5 and complexity at ${item.complexity}/5. If the output touches customers, pricing, private data, or compliance, require human approval.`],
+    ["Pilot Launch", `Measure value with: ${item.kpis}. Keep the pilot small enough to run within normal SMB capacity.`],
+  ];
 }
 
 function applyTaxonomyWorkflow(item) {
@@ -410,6 +554,8 @@ function renderDashboard() {
 function renderTaxonomySimulator() {
   const laneSelect = document.getElementById("taxonomyLane");
   const workflowSelect = document.getElementById("taxonomyWorkflow");
+  const fitTest = document.getElementById("workflowFitTest");
+  const explainer = document.getElementById("assignmentExplainer");
   const detail = document.getElementById("taxonomyDetail");
   const shortlist = document.getElementById("taxonomyShortlist");
   const band = document.getElementById("taxonomyBand");
@@ -417,6 +563,8 @@ function renderTaxonomySimulator() {
 
   if (!taxonomyData.workflows.length) {
     band.textContent = "Unavailable";
+    if (fitTest) fitTest.innerHTML = "";
+    if (explainer) explainer.innerHTML = "";
     detail.innerHTML = `<div class="taxonomy-empty">Taxonomy data could not be loaded.</div>`;
     shortlist.innerHTML = "";
     return;
@@ -456,6 +604,8 @@ function renderTaxonomySimulator() {
   const item = selectedTaxonomyWorkflow();
   const lane = selectedLaneSummary(item?.lane);
   if (!item) return;
+  renderWorkflowFitTest(fitTest);
+  renderAssignmentExplainer(explainer, item);
   const scoreBand = priorityBand(item.score);
   band.textContent = scoreBand;
   detail.innerHTML = `
@@ -508,6 +658,84 @@ function renderTaxonomySimulator() {
       renderAll();
     };
   });
+}
+
+function renderWorkflowFitTest(container) {
+  if (!container) return;
+  const recommendation = workflowFitRecommendation();
+  const answers = state.workflowFitAnswers || {};
+  const answered = Object.values(answers).filter(Boolean).length;
+  container.innerHTML = `
+    <div class="fit-test-head">
+      <div>
+        <span>Workflow Fit Test</span>
+        <strong>Answer six questions to get a recommended workflow.</strong>
+      </div>
+      <div class="fit-test-status">${answered}/${workflowFitQuestions.length} answered</div>
+    </div>
+    <div class="fit-test-grid">
+      ${workflowFitQuestions.map((question) => `
+        <label>${escapeHtml(question.label)}
+          <select data-fit-question="${escapeHtml(question.key)}">
+            ${question.options.map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join("")}
+          </select>
+        </label>
+      `).join("")}
+    </div>
+    <div class="fit-result ${recommendation ? "" : "empty"}">
+      ${recommendation ? `
+        <div>
+          <span>Recommended workflow</span>
+          <strong>${escapeHtml(recommendation.workflow)}</strong>
+          <p>${escapeHtml(recommendation.lane)} · Fit ${recommendation.fitScore} · Taxonomy ${recommendation.score}</p>
+        </div>
+        <button id="useRecommendationBtn" class="icon-btn" type="button"><i data-lucide="sparkles"></i><span>Use Recommendation</span></button>
+      ` : `
+        <div>
+          <span>Recommended workflow</span>
+          <strong>Complete the test to generate a recommendation.</strong>
+          <p>The test uses lane fit, data access, review capacity, risk, and change burden on top of the Week 3 taxonomy score.</p>
+        </div>
+      `}
+    </div>
+  `;
+  container.querySelectorAll("[data-fit-question]").forEach((select) => {
+    select.value = answers[select.dataset.fitQuestion] || "";
+    select.onchange = (event) => {
+      state.workflowFitAnswers = { ...(state.workflowFitAnswers || {}), [event.target.dataset.fitQuestion]: event.target.value };
+      const next = workflowFitRecommendation();
+      if (next) {
+        state.recommendedTaxonomyWorkflow = next.workflow;
+        state.selectedTaxonomyLane = next.lane;
+        state.selectedTaxonomyWorkflow = next.workflow;
+      }
+      saveState();
+      renderAll();
+    };
+  });
+  const useButton = document.getElementById("useRecommendationBtn");
+  if (useButton && recommendation) {
+    useButton.onclick = () => applyTaxonomyWorkflow(recommendation);
+  }
+}
+
+function renderAssignmentExplainer(container, item) {
+  if (!container || !item) return;
+  const explainers = assignmentExplainerFor(item);
+  container.innerHTML = `
+    <div class="assignment-explainer-head">
+      <span>Assignment Explainer</span>
+      <strong>What this participant needs to complete for ${escapeHtml(item.workflow)}</strong>
+    </div>
+    <div class="assignment-explainer-grid">
+      ${explainers.map(([title, body]) => `
+        <div class="assignment-explainer-item">
+          <strong>${escapeHtml(title)}</strong>
+          <p>${escapeHtml(body)}</p>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 function renderJourney() {
@@ -591,11 +819,19 @@ function renderAssignmentTabs() {
 function renderAssignmentForm() {
   const assignment = assignments.find((item) => item.id === state.activeAssignment) || assignments[0];
   const progress = assignmentProgress(assignment);
+  const taxonomyItem = selectedTaxonomyWorkflow();
+  const explainer = assignmentExplainerFor(taxonomyItem).find(([title]) => assignment.label.includes(title) || title.includes(assignment.label));
   const wrap = document.getElementById("assignmentForm");
   wrap.innerHTML = "";
   const section = document.createElement("section");
   section.className = "form-section";
   section.innerHTML = `<h3>${assignment.title}<span>${progress.count}/${progress.total} complete</span></h3>`;
+  if (explainer) {
+    const explain = document.createElement("div");
+    explain.className = "inline-assignment-explainer";
+    explain.innerHTML = `<strong>${escapeHtml(explainer[0])}</strong><p>${escapeHtml(explainer[1])}</p>`;
+    section.appendChild(explain);
+  }
   const body = document.createElement("div");
   body.className = "form-section-body";
   assignment.fields.forEach(([key, label, placeholder, type]) => {

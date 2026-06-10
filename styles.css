@@ -566,6 +566,108 @@ textarea:focus {
   font-size: 12px;
 }
 
+.workflow-fit-test,
+.assignment-explainer {
+  border: 1px solid var(--line);
+  background: var(--white);
+  padding: 14px;
+  display: grid;
+  gap: 14px;
+}
+
+.fit-test-head,
+.assignment-explainer-head,
+.fit-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.fit-test-head span,
+.fit-result span,
+.assignment-explainer-head span {
+  color: var(--red);
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.fit-test-head strong,
+.assignment-explainer-head strong,
+.fit-result strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.fit-test-status {
+  background: var(--black);
+  color: var(--white);
+  border-radius: 999px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.fit-test-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.fit-result {
+  border: 1px solid var(--line);
+  background: var(--soft-red);
+  padding: 14px;
+}
+
+.fit-result.empty {
+  background: var(--soft);
+}
+
+.fit-result p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.assignment-explainer-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.assignment-explainer-item,
+.inline-assignment-explainer {
+  border: 1px solid var(--line);
+  background: var(--soft);
+  padding: 12px;
+}
+
+.assignment-explainer-item strong,
+.inline-assignment-explainer strong {
+  display: block;
+  color: var(--black);
+  line-height: 1.15;
+}
+
+.assignment-explainer-item p,
+.inline-assignment-explainer p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.inline-assignment-explainer {
+  margin: 16px 16px 0;
+  background: var(--soft-red);
+  border-color: var(--red);
+}
+
 .guide-panel {
   grid-column: 1 / -1;
 }
@@ -1035,7 +1137,9 @@ textarea:focus {
   .guide-list,
   .taxonomy-detail,
   .taxonomy-routing,
-  .taxonomy-shortlist-grid {
+  .taxonomy-shortlist-grid,
+  .fit-test-grid,
+  .assignment-explainer-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1057,6 +1161,13 @@ textarea:focus {
   .taxonomy-controls,
   .taxonomy-copy {
     grid-template-columns: 1fr;
+  }
+
+  .fit-test-head,
+  .assignment-explainer-head,
+  .fit-result {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   h1 {
