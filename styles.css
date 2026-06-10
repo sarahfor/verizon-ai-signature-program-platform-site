@@ -265,9 +265,12 @@ h3 {
   z-index: 2;
 }
 
-.participant-panel,
-.journey-panel {
+.participant-panel {
   grid-column: span 1;
+}
+
+.journey-panel {
+  grid-column: 1 / -1;
 }
 
 .field-grid {
@@ -368,11 +371,12 @@ textarea:focus {
 .journey {
   padding: 20px;
   display: grid;
-  grid-template-columns: repeat(6, minmax(110px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
 }
 
 .journey-step {
+  min-width: 0;
   min-height: 118px;
   border: 1px solid var(--line);
   padding: 12px;
