@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Participant Dashboard</title>
-    <link rel="stylesheet" href="./styles.css?v=taxonomy-simulator" />
+    <link rel="stylesheet" href="./styles.css?v=no-taxonomy-panel" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   </head>
   <body>
@@ -89,28 +89,6 @@
                 </div>
               </div>
               <div class="gate-list" id="gateList"></div>
-            </section>
-
-            <section class="panel taxonomy-panel">
-              <div class="panel-head">
-                <div>
-                  <p class="eyebrow">Week 3 Taxonomy</p>
-                  <h2>Workflow simulator</h2>
-                </div>
-                <span class="badge" id="taxonomyBand">Loading</span>
-              </div>
-              <div class="taxonomy-simulator">
-                <div class="taxonomy-controls">
-                  <label>Workflow lane
-                    <select id="taxonomyLane"></select>
-                  </label>
-                  <label>Specific workflow
-                    <select id="taxonomyWorkflow"></select>
-                  </label>
-                </div>
-                <div id="taxonomyDetail" class="taxonomy-detail"></div>
-                <div id="taxonomyShortlist" class="taxonomy-shortlist"></div>
-              </div>
             </section>
 
             <section class="panel journey-panel">
@@ -273,6 +251,6 @@
       </label>
     </template>
 
-    <script src="./app.js?v=taxonomy-simulator"></script>
+    <script src="./app.js?v=no-taxonomy-panel"></script>
   </body>
 </html>

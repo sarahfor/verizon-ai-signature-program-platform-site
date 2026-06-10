@@ -437,135 +437,6 @@ textarea:focus {
   color: var(--red);
 }
 
-.taxonomy-panel {
-  grid-column: 1 / -1;
-}
-
-.taxonomy-simulator {
-  padding: 20px 20px 24px;
-  display: grid;
-  gap: 16px;
-}
-
-.taxonomy-controls {
-  display: grid;
-  grid-template-columns: minmax(260px, 0.8fr) minmax(320px, 1.2fr);
-  gap: 14px;
-}
-
-.taxonomy-detail {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 14px;
-}
-
-.taxonomy-score-card {
-  border: 1px solid var(--line);
-  background: var(--black);
-  color: var(--white);
-  padding: 16px;
-  display: grid;
-  gap: 14px;
-}
-
-.taxonomy-score-card span,
-.taxonomy-copy span,
-.taxonomy-routing strong,
-.taxonomy-shortlist h3 {
-  color: var(--red);
-  font-size: 11px;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-
-.taxonomy-score-card strong {
-  display: block;
-  font-size: 52px;
-  line-height: 1;
-}
-
-.taxonomy-score-card em {
-  color: #d8d8d8;
-  font-style: normal;
-  font-weight: 700;
-}
-
-.taxonomy-metrics {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.taxonomy-metrics span {
-  background: #262626;
-  color: var(--white);
-  padding: 8px;
-  text-transform: none;
-}
-
-.taxonomy-copy {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.taxonomy-copy div,
-.taxonomy-routing div,
-.taxonomy-shortlist-item,
-.taxonomy-empty {
-  border: 1px solid var(--line);
-  background: var(--soft);
-  padding: 12px;
-}
-
-.taxonomy-copy p,
-.taxonomy-routing span {
-  display: block;
-  margin: 5px 0 0;
-  color: var(--ink);
-  line-height: 1.28;
-}
-
-.taxonomy-routing {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.taxonomy-shortlist {
-  display: grid;
-  gap: 10px;
-}
-
-.taxonomy-shortlist-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.taxonomy-shortlist-item {
-  text-align: left;
-  min-height: 86px;
-}
-
-.taxonomy-shortlist-item.active {
-  background: var(--soft-red);
-  border-color: var(--red);
-}
-
-.taxonomy-shortlist-item strong {
-  display: block;
-  color: var(--black);
-  line-height: 1.14;
-}
-
-.taxonomy-shortlist-item span {
-  display: block;
-  margin-top: 8px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
 .guide-panel {
   grid-column: 1 / -1;
 }
@@ -1032,10 +903,7 @@ textarea:focus {
   }
 
   .participant-guide,
-  .guide-list,
-  .taxonomy-detail,
-  .taxonomy-routing,
-  .taxonomy-shortlist-grid {
+  .guide-list {
     grid-template-columns: 1fr;
   }
 }
@@ -1053,9 +921,7 @@ textarea:focus {
 
   .field-grid.two,
   .journey,
-  .nav,
-  .taxonomy-controls,
-  .taxonomy-copy {
+  .nav {
     grid-template-columns: 1fr;
   }
 
@@ -1242,7 +1108,6 @@ h3 {
 .gate-list,
 .journey,
 .artifact-stack,
-.taxonomy-simulator,
 .participant-guide,
 .assignment-form,
 .builder-content,
@@ -1278,10 +1143,6 @@ textarea {
 
 .gate-item,
 .journey-step,
-.taxonomy-score-card,
-.taxonomy-copy div,
-.taxonomy-routing div,
-.taxonomy-shortlist-item,
 .workflow-card-row,
 .plan-row,
 .packet-row,
@@ -1395,10 +1256,6 @@ textarea {
 
 .gate-item,
 .journey-step,
-.taxonomy-score-card,
-.taxonomy-copy div,
-.taxonomy-routing div,
-.taxonomy-shortlist-item,
 .workflow-card-row,
 .plan-row,
 .packet-row,
