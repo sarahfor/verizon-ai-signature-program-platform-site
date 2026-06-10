@@ -2,13 +2,18 @@
 
 Static participant dashboard for operating the Verizon AI Signature Program simulation.
 
-Open locally:
+Open with a local server (recommended):
 
-`http://127.0.0.1:4177`
+```
+cd "/Users/sarahforrest/Verizon Project/verizon-program-platform"
+python3 -m http.server 4177
+```
 
-Or open:
+Then open: `http://127.0.0.1:4177`
 
-`/Users/sarahforrest/output/verizon-program-platform/index.html`
+Or open directly in your browser (file:// also works — taxonomy data is embedded as a fallback):
+
+`/Users/sarahforrest/Verizon Project/verizon-program-platform/index.html`
 
 ## Included
 

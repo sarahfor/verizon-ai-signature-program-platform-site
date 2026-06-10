@@ -104,21 +104,73 @@ const initialState = {
   activeScenario: "testCase1",
   selectedTaxonomyLane: "",
   selectedTaxonomyWorkflow: "",
-  workflowFitAnswers: {
-    objective: "",
-    systems: "",
-    dataAccess: "",
-    reviewer: "",
-    risk: "",
-    change: "",
-  },
-  recommendedTaxonomyWorkflow: "",
   runCount: 0,
   runLog: [],
 };
 
 const state = loadState();
 let taxonomyData = { workflows: [], lanes: [], formula: "" };
+
+const TAXONOMY_FALLBACK = {
+  "source": "Workflow Taxonomy and Use-Case Matrix - Revised Workflow Lanes.xlsx",
+  "formula": "Priority Score = (0.35 * Value + 0.25 * Readiness + 0.20 * (6 - Complexity) + 0.20 * (6 - Risk)) * 20",
+  "workflows": [
+    { "lane": "Growth, Content, and Demand", "workflow": "Content repurposing", "outcome": "Increase content output without adding headcount", "pain": "Long-form content is underused; owners lack time to turn source material into campaigns", "friction": "Manual rewriting across email, social, web, and sales collateral", "useCases": "Turn webinars, blogs, founder notes, podcasts, and customer stories into social posts, email copy, blog snippets, FAQs, and short-form video scripts", "baseline": "Shared docs, website CMS, email platform, social scheduler", "kpis": "Content output volume; time to publish; campaign cadence; engagement rate", "notes": "Strong first-cohort quick win", "score": 88, "value": 4.0, "complexity": 1.0, "readiness": 4.0, "risk": 1.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Google/Canva/HubSpot/Shopify/ChatGPT/Claude", "guardrails": "Human review for brand voice, claims, and accuracy" },
+    { "lane": "Growth, Content, and Demand", "workflow": "Email campaign production", "outcome": "Improve campaign consistency and send cadence", "pain": "Newsletters, nurture emails, and follow-ups are inconsistent or delayed", "friction": "Repeated manual drafting and formatting across campaign types", "useCases": "Draft newsletters, promotional emails, nurture sequences, event follow-ups, reactivation emails, and segmented variants", "baseline": "Email platform, CRM, shared docs, customer list", "kpis": "Send frequency; open rate; click rate; response rate; time saved", "notes": "Strong first-cohort fit if list hygiene exists", "score": 88, "value": 4.0, "complexity": 1.0, "readiness": 4.0, "risk": 1.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Google/HubSpot/Klaviyo/Mailchimp/ChatGPT/Claude", "guardrails": "Human approval before send; no unsupported claims" },
+    { "lane": "Growth, Content, and Demand", "workflow": "Social media production", "outcome": "Reduce repetitive content production work", "pain": "Owners or small teams struggle to maintain regular posting", "friction": "Manual caption writing, calendar planning, and channel-specific adaptation", "useCases": "Generate captions, post calendars, creative briefs, platform-specific variants, hashtag sets, and response drafts", "baseline": "Social platforms, Canva, shared docs, content calendar", "kpis": "Posting cadence; time saved; engagement rate; content backlog reduced", "notes": "Good low-risk starter workflow", "score": 84, "value": 3.5, "complexity": 1.0, "readiness": 4.0, "risk": 1.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Canva/Google/HubSpot/ChatGPT/Claude", "guardrails": "Review brand tone and sensitive responses" },
+    { "lane": "Growth, Content, and Demand", "workflow": "Campaign planning and segmentation", "outcome": "Improve targeting and campaign planning discipline", "pain": "Campaign ideas are ad hoc; audiences and messages are not clearly segmented", "friction": "Planning lives in founder memory, spreadsheets, or scattered notes", "useCases": "Build campaign briefs, audience-message matrices, channel plans, campaign timelines, and test plans", "baseline": "CRM, email tool, spreadsheet, shared docs", "kpis": "Campaign launch speed; segment coverage; qualified lead volume; test velocity", "notes": "Best where basic customer list hygiene exists", "score": 80, "value": 4.0, "complexity": 2.0, "readiness": 4.0, "risk": 2.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "HubSpot/Google/Microsoft/Shopify/ChatGPT/Claude", "guardrails": "Review segmentation logic and customer data use" },
+    { "lane": "Growth, Content, and Demand", "workflow": "Customer education content", "outcome": "Help customers understand products, services, and next steps", "pain": "Teams answer recurring education questions manually", "friction": "Repeated explanation work across onboarding, support, and sales", "useCases": "Create onboarding guides, how-to content, explainer emails, service FAQs, and educational mini-guides", "baseline": "Website CMS, shared docs, support docs, email platform", "kpis": "FAQ deflection; onboarding time; support questions; customer satisfaction", "notes": "Good fit for services, ecommerce, education, and coaching", "score": 84, "value": 4.0, "complexity": 1.0, "readiness": 4.0, "risk": 2.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Google/Canva/Shopify/HubSpot/ChatGPT/Claude", "guardrails": "Review technical accuracy and customer promises" },
+    { "lane": "Growth, Content, and Demand", "workflow": "Product or service page copy", "outcome": "Improve clarity and conversion on web/product pages", "pain": "Pages are stale, inconsistent, or too time-consuming to update", "friction": "Manual copy updates across product, service, and landing pages", "useCases": "Draft landing pages, ecommerce product descriptions, service descriptions, local SEO pages, and comparison pages", "baseline": "Website CMS, Shopify, Wix, Squarespace, shared docs", "kpis": "Page update cycle time; conversion rate; search visibility; content completeness", "notes": "Strong stack-native fit for ecommerce and services", "score": 80, "value": 4.0, "complexity": 2.0, "readiness": 4.0, "risk": 2.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Shopify/Wix/Google/Canva/ChatGPT/Claude", "guardrails": "Review claims, pricing, legal/compliance language" },
+    { "lane": "Growth, Content, and Demand", "workflow": "Testimonial and case study workflow", "outcome": "Turn proof points into usable sales and marketing assets", "pain": "Customer stories exist but are not packaged for sales or marketing", "friction": "Manual interview synthesis and copy drafting", "useCases": "Convert customer feedback or interviews into case study drafts, testimonial snippets, proof points, and sales enablement copy", "baseline": "CRM, review platforms, interview notes, shared docs", "kpis": "Case study cycle time; proof assets created; sales usage; conversion support", "notes": "Good if consent and source material are clear", "score": 74, "value": 3.5, "complexity": 2.0, "readiness": 3.5, "risk": 2.0, "guidance": "Tier 2 selective / use with controls", "stack": "Google/HubSpot/Canva/ChatGPT/Claude", "guardrails": "Confirm customer permission and factual accuracy" },
+    { "lane": "Growth, Content, and Demand", "workflow": "Brand voice and messaging system", "outcome": "Create consistent brand language across channels", "pain": "Content varies by writer; brand voice is informal or undocumented", "friction": "No reusable voice guide, approved claims list, or review criteria", "useCases": "Create a reusable brand voice guide, prompt library, approved claims list, and content review checklist", "baseline": "Existing content library, shared docs, website, sales materials", "kpis": "Consistency score; review time; rewrite cycles; approved prompt reuse", "notes": "Useful foundation for content-heavy businesses", "score": 76, "value": 3.5, "complexity": 2.0, "readiness": 4.0, "risk": 2.0, "guidance": "Tier 1 or Tier 2 with SME review", "stack": "Google/Canva/HubSpot/ChatGPT/Claude", "guardrails": "Maintain approved claims and final human review" },
+    { "lane": "Growth, Content, and Demand", "workflow": "Marketing performance recap", "outcome": "Convert marketing activity into next-step decisions", "pain": "Campaign data exists but is not reviewed consistently", "friction": "Metrics live across tools and are interpreted inconsistently", "useCases": "Summarize campaign results, extract learnings, identify best-performing messages, and draft next-test recommendations", "baseline": "Email platform, web analytics, Shopify, CRM, spreadsheet", "kpis": "Report cycle time; next tests identified; decision speed; campaign ROI", "notes": "Bridge between marketing and data/insights lane", "score": 72, "value": 3.5, "complexity": 2.0, "readiness": 3.0, "risk": 2.0, "guidance": "Tier 2 selective / use with controls", "stack": "HubSpot/Shopify/Google/Microsoft/ChatGPT/Claude", "guardrails": "Use source data references; avoid unsupported causality claims" },
+    { "lane": "Growth, Content, and Demand", "workflow": "Market and competitor scan", "outcome": "Support campaign planning with faster external research", "pain": "Owners lack time to monitor competitors, reviews, and market trends", "friction": "Research is fragmented and inconsistent", "useCases": "Summarize competitor messaging, pricing claims, customer reviews, and market signals for campaign planning", "baseline": "Web research, review platforms, CRM notes, shared docs", "kpis": "Research time saved; insight quality; campaign inputs created", "notes": "Useful but less direct ROI than production workflows", "score": 68, "value": 3.0, "complexity": 2.0, "readiness": 3.0, "risk": 2.0, "guidance": "Tier 2 selective / use with controls", "stack": "Google/ChatGPT/Claude/Perplexity-style research tools", "guardrails": "Cite sources; review for hallucinations and outdated information" },
+    { "lane": "Revenue Response and Client Conversion", "workflow": "Lead follow-up drafting", "outcome": "Improve conversion and reduce dropped leads", "pain": "Leads are not followed up quickly or consistently", "friction": "Manual email/SMS follow-up with inconsistent cadence", "useCases": "Draft first-response emails, SMS follow-ups, missed-call replies, quote follow-ups, and reactivation messages", "baseline": "CRM or spreadsheet, email, SMS tool, website forms", "kpis": "Lead response time; meeting-booked rate; conversion rate; follow-up completion", "notes": "One of the strongest first-cohort defaults", "score": 87, "value": 5.0, "complexity": 2.0, "readiness": 4.0, "risk": 2.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "HubSpot/Microsoft/Google/Square/Jobber/ChatGPT/Claude", "guardrails": "Human approval before send; avoid pricing or service promises without review" },
+    { "lane": "Revenue Response and Client Conversion", "workflow": "Lead intake summarization", "outcome": "Create cleaner lead briefs and faster triage", "pain": "Inquiry details arrive across forms, calls, emails, and chats", "friction": "Manual review and retyping of scattered lead information", "useCases": "Summarize intake forms, inquiries, voicemails, chat transcripts, and call notes into lead briefs", "baseline": "Website forms, inbox, CRM, call notes, chat logs", "kpis": "Triage time; lead completeness; follow-up quality; handoff speed", "notes": "Good if source inputs are accessible", "score": 80, "value": 4.0, "complexity": 2.0, "readiness": 4.0, "risk": 2.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "HubSpot/Google/Microsoft/ChatGPT/Claude", "guardrails": "Remove sensitive details not needed for the next step" },
+    { "lane": "Revenue Response and Client Conversion", "workflow": "CRM notes and meeting summaries", "outcome": "Improve pipeline hygiene and follow-up discipline", "pain": "Notes are incomplete; tasks and context fall through the cracks", "friction": "Information captured after meetings is fragmented or skipped", "useCases": "Convert meeting notes into CRM updates, next steps, contact summaries, deal notes, and follow-up tasks", "baseline": "CRM, calendar, meeting transcripts, notes", "kpis": "CRM completeness; admin time saved; task completion; follow-up SLA", "notes": "Practical and champion-friendly", "score": 80, "value": 4.0, "complexity": 2.0, "readiness": 4.0, "risk": 2.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "HubSpot/Microsoft/Google/Zoom/ChatGPT/Claude", "guardrails": "Review summaries before CRM entry if customer-sensitive" },
+    { "lane": "Revenue Response and Client Conversion", "workflow": "Proposal, quote, and estimate drafting", "outcome": "Shorten sales cycle and improve consistency", "pain": "Proposals and estimates are time-consuming and inconsistent", "friction": "Manual copy/paste and rework across similar requests", "useCases": "Draft proposals, scopes of work, project summaries, pricing narratives, and client-specific recommendations", "baseline": "Docs, proposal templates, CRM, spreadsheet, estimate tool", "kpis": "Turnaround time; proposal volume; win rate; revision cycles", "notes": "High value if templates and examples already exist", "score": 81, "value": 4.5, "complexity": 2.0, "readiness": 3.5, "risk": 2.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Google/Microsoft/HubSpot/Jobber/ServiceTitan/ChatGPT/Claude", "guardrails": "Final human review for scope, price, exclusions, and commitments" },
+    { "lane": "Revenue Response and Client Conversion", "workflow": "Discovery call preparation", "outcome": "Improve sales conversations and qualification", "pain": "Teams enter calls without consistent prep or question structure", "friction": "Manual account research and scattered CRM context", "useCases": "Generate account briefs, suggested questions, known pain points, and meeting prep based on CRM/history", "baseline": "CRM, website, notes, LinkedIn, calendar", "kpis": "Prep time saved; qualification quality; next-step conversion", "notes": "Useful support workflow for advisory and B2B services", "score": 78, "value": 3.5, "complexity": 1.5, "readiness": 4.0, "risk": 2.0, "guidance": "Tier 1 or Tier 2 with SME review", "stack": "HubSpot/Google/Microsoft/ChatGPT/Claude", "guardrails": "Source-check research and avoid assumptions about prospect needs" },
+    { "lane": "Revenue Response and Client Conversion", "workflow": "Objection handling support", "outcome": "Improve consistency in sales responses", "pain": "Common objections are handled unevenly by different team members", "friction": "Responses are improvised and not captured as reusable assets", "useCases": "Create response snippets for objections around price, timing, scope, implementation, or comparison shopping", "baseline": "Sales notes, CRM, proposal templates, shared docs", "kpis": "Response quality; sales cycle time; objection-to-next-step rate", "notes": "Good when reviewed and paired with approved messaging", "score": 74, "value": 3.5, "complexity": 2.0, "readiness": 3.5, "risk": 2.0, "guidance": "Tier 2 selective / use with controls", "stack": "HubSpot/Google/Microsoft/ChatGPT/Claude", "guardrails": "Review tone and avoid unsupported promises" },
+    { "lane": "Revenue Response and Client Conversion", "workflow": "Customer response drafting and FAQ support", "outcome": "Improve response speed without fully automating service", "pain": "Teams answer the same questions repeatedly; quality and tone vary", "friction": "Customer replies are manual and inconsistent", "useCases": "Draft responses to common service questions, support inquiries, status updates, and post-purchase questions", "baseline": "Inbox, help desk, docs, CRM, Shopify", "kpis": "Response time; first-response SLA; CSAT; support backlog", "notes": "Keep human approval in place; avoid fully autonomous bots by default", "score": 71, "value": 4.0, "complexity": 2.0, "readiness": 3.0, "risk": 3.0, "guidance": "Tier 2 selective / use with controls", "stack": "HubSpot/Zendesk/Shopify/Google/Microsoft/ChatGPT/Claude", "guardrails": "Human approval for customer-facing responses" },
+    { "lane": "Revenue Response and Client Conversion", "workflow": "Renewal or upsell outreach", "outcome": "Increase retention and expansion follow-up", "pain": "Renewals and expansion opportunities are missed or inconsistent", "friction": "Manual account review and outreach drafting", "useCases": "Draft renewal reminders, service expansion emails, cross-sell language, and check-in sequences", "baseline": "CRM, billing/subscription tool, email platform", "kpis": "Renewal rate; upsell pipeline; outreach completion; churn reduction", "notes": "Good when customer history is accessible and reviewed", "score": 78, "value": 4.0, "complexity": 2.0, "readiness": 3.5, "risk": 2.0, "guidance": "Tier 1 or Tier 2 with SME review", "stack": "HubSpot/Google/Microsoft/Shopify/ChatGPT/Claude", "guardrails": "Review eligibility, pricing, and customer context" },
+    { "lane": "Revenue Response and Client Conversion", "workflow": "Sales-to-delivery handoff", "outcome": "Reduce dropped context after a sale closes", "pain": "Delivery teams lack clear context from sales conversations", "friction": "Manual handoff summaries and inconsistent kickoff notes", "useCases": "Convert closed-won notes into onboarding summaries, internal handoff briefs, kickoff agendas, and delivery checklists", "baseline": "CRM, docs, project management tool, email", "kpis": "Handoff completeness; kickoff speed; rework reduction; client satisfaction", "notes": "Strong workflow for service businesses", "score": 80, "value": 4.0, "complexity": 2.0, "readiness": 4.0, "risk": 2.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "HubSpot/Google/Microsoft/Asana/Monday/ChatGPT/Claude", "guardrails": "Review for scope accuracy and sensitive customer details" },
+    { "lane": "Revenue Response and Client Conversion", "workflow": "Review and reputation response support", "outcome": "Respond consistently to public reviews and customer feedback", "pain": "Reviews are ignored or handled inconsistently", "friction": "Manual public response drafting with reputation risk", "useCases": "Draft review responses, categorize sentiment, identify escalation cases, and summarize recurring themes", "baseline": "Google Business Profile, review platforms, CRM, inbox", "kpis": "Response time; review coverage; sentiment themes; escalation resolution", "notes": "Useful but requires brand/reputation review", "score": 64, "value": 3.0, "complexity": 2.0, "readiness": 3.0, "risk": 3.0, "guidance": "Tier 3 advanced clinic / data-dependent", "stack": "Google/ChatGPT/Claude/CRM/review platforms", "guardrails": "Human review before public posting" },
+    { "lane": "Operations and Process Reliability", "workflow": "SOP creation", "outcome": "Reduce tribal knowledge and improve repeatability", "pain": "Processes live in people’s heads; onboarding is inconsistent", "friction": "Instructions are scattered or undocumented", "useCases": "Turn process notes, Loom videos, meeting transcripts, or staff instructions into step-by-step SOPs", "baseline": "Docs, shared drive, notes, videos, messaging threads", "kpis": "Documentation coverage; onboarding time; error reduction; owner dependency", "notes": "Low-risk, high-utility starter workflow", "score": 81, "value": 3.0, "complexity": 1.0, "readiness": 4.0, "risk": 1.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Google/Microsoft/Notion/ChatGPT/Claude", "guardrails": "Review with actual process owner before publishing" },
+    { "lane": "Operations and Process Reliability", "workflow": "Internal documentation and knowledge base", "outcome": "Improve internal access to repeatable information", "pain": "Employees ask the same internal questions repeatedly", "friction": "Knowledge lives across docs, chats, emails, and owner memory", "useCases": "Create team FAQs, knowledge base articles, role guides, checklists, and how-to documents", "baseline": "Shared drive, SharePoint, Drive, Notion, messaging tools", "kpis": "Search time reduced; repeated questions reduced; doc usage", "notes": "Strong internal implementation use case", "score": 84, "value": 3.5, "complexity": 1.0, "readiness": 4.0, "risk": 1.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Google/Microsoft/Notion/ChatGPT/Claude", "guardrails": "Keep source-of-truth owner and update cadence" },
+    { "lane": "Operations and Process Reliability", "workflow": "Onboarding checklists", "outcome": "Standardize employee, client, or vendor onboarding", "pain": "Onboarding varies by person and misses steps", "friction": "Manual checklist creation and inconsistent handoffs", "useCases": "Build employee onboarding, client onboarding, vendor onboarding, and project kickoff checklists", "baseline": "Docs, project management tool, HR/client onboarding materials", "kpis": "Onboarding time; missed steps; completion rate; new-hire/client satisfaction", "notes": "Good fit across many verticals", "score": 84, "value": 3.5, "complexity": 1.0, "readiness": 4.0, "risk": 1.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Google/Microsoft/Asana/Monday/ChatGPT/Claude", "guardrails": "Review legal, HR, and customer-specific requirements" },
+    { "lane": "Operations and Process Reliability", "workflow": "Meeting-to-task workflow", "outcome": "Convert conversations into accountable next steps", "pain": "Meetings create notes but not clear ownership or follow-through", "friction": "Manual summarization and task creation after meetings", "useCases": "Convert meeting transcripts into summaries, decisions, owners, deadlines, and follow-up tasks", "baseline": "Calendar, meeting transcripts, docs, project management tool", "kpis": "Task completion; admin time saved; decision capture; follow-up speed", "notes": "Strong productivity workflow with low technical burden", "score": 81, "value": 3.0, "complexity": 1.0, "readiness": 4.0, "risk": 1.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Microsoft Teams/Google Meet/Zoom/Asana/ChatGPT/Claude", "guardrails": "Review decisions and assigned owners before sharing" },
+    { "lane": "Operations and Process Reliability", "workflow": "Recurring admin summaries", "outcome": "Free owner/admin time from repeated status work", "pain": "Weekly updates and status reports consume time", "friction": "Repeating low-leverage documentation tasks", "useCases": "Summarize weekly operations updates, inbox themes, project status notes, or client activity", "baseline": "Email, docs, project management tool, shared drive", "kpis": "Admin time saved; report cycle time; completion rate", "notes": "Good supporting use case but less strategic than revenue workflows", "score": 81, "value": 3.0, "complexity": 1.0, "readiness": 4.0, "risk": 1.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Google/Microsoft/Asana/Monday/ChatGPT/Claude", "guardrails": "Review for accuracy and omitted context" },
+    { "lane": "Operations and Process Reliability", "workflow": "Scheduling support", "outcome": "Reduce coordination burden and missed prep", "pain": "Scheduling and reminder messages are repetitive", "friction": "Manual back-and-forth communication and prep instructions", "useCases": "Draft scheduling emails, appointment confirmations, prep instructions, and reminder templates", "baseline": "Calendar, email, scheduling tool, CRM", "kpis": "Scheduling cycle time; no-show rate; admin time saved", "notes": "Useful but often a supporting workflow", "score": 70, "value": 3.0, "complexity": 2.0, "readiness": 3.5, "risk": 2.0, "guidance": "Tier 2 selective / use with controls", "stack": "Google/Microsoft/Calendly/Square/Jobber/ChatGPT/Claude", "guardrails": "Human review before calendar commitments if automated" },
+    { "lane": "Operations and Process Reliability", "workflow": "Invoice follow-up", "outcome": "Reduce outstanding receivables and admin burden", "pain": "Invoices go out late or follow-up is inconsistent", "friction": "Manual reminders and inconsistent collections discipline", "useCases": "Draft payment reminders, past-due follow-ups, installment notices, and collections escalation language", "baseline": "QuickBooks, accounting system, spreadsheet, email", "kpis": "Days sales outstanding; overdue invoice count; follow-up completion; cash collected", "notes": "Good fit when accounting records are clean", "score": 76, "value": 4.0, "complexity": 2.0, "readiness": 4.0, "risk": 3.0, "guidance": "Tier 1 or Tier 2 with SME review", "stack": "QuickBooks/Intuit/Microsoft/Google/ChatGPT/Claude", "guardrails": "Review tone, customer history, and payment facts" },
+    { "lane": "Operations and Process Reliability", "workflow": "Bookkeeping prep and categorization support", "outcome": "Reduce manual finance prep and improve visibility", "pain": "Owners spend time organizing receipts, transactions, and month-end notes", "friction": "Repetitive categorization and cleanup work", "useCases": "Generate categorization suggestions, receipt summaries, missing-document lists, transaction explanations, and accountant prep packets", "baseline": "QuickBooks, Xero, bank export, receipt capture, spreadsheet", "kpis": "Close time; reconciliation time; missing docs; reporting turnaround", "notes": "Use only with human review and data boundaries", "score": 63, "value": 4.0, "complexity": 3.0, "readiness": 3.0, "risk": 4.0, "guidance": "Tier 3 advanced clinic / data-dependent", "stack": "QuickBooks/Intuit/Xero/Microsoft/Claude/ChatGPT", "guardrails": "Do not automate accounting judgment; accountant/bookkeeper review required" },
+    { "lane": "Operations and Process Reliability", "workflow": "Vendor communication", "outcome": "Improve consistency in vendor follow-up and issue handling", "pain": "Vendor updates are informal and scattered", "friction": "Manual follow-up and issue summarization", "useCases": "Draft vendor follow-ups, order status requests, issue summaries, and procurement/admin emails", "baseline": "Email, procurement docs, inventory/order systems", "kpis": "Response time; issue closure; admin time saved", "notes": "Good supporting workflow for operations-heavy businesses", "score": 70, "value": 3.0, "complexity": 2.0, "readiness": 3.5, "risk": 2.0, "guidance": "Tier 2 selective / use with controls", "stack": "Google/Microsoft/ChatGPT/Claude", "guardrails": "Review commitments, quantities, and payment terms" },
+    { "lane": "Operations and Process Reliability", "workflow": "Quality assurance checklists", "outcome": "Improve consistency before work leaves the business", "pain": "Review criteria are informal or vary by person", "friction": "Manual QA and subjective approval steps", "useCases": "Build review checklists for proposals, content, client deliverables, invoices, onboarding, or service delivery", "baseline": "Docs, templates, project management tool, shared drive", "kpis": "Error reduction; review time; revision cycles; approval consistency", "notes": "Strong complement to every workflow lane", "score": 82, "value": 3.5, "complexity": 1.5, "readiness": 4.0, "risk": 1.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Google/Microsoft/Notion/ChatGPT/Claude", "guardrails": "Assign reviewer and keep checklist updated" },
+    { "lane": "Operations and Process Reliability", "workflow": "Internal training materials", "outcome": "Turn SOPs into practical enablement assets", "pain": "Training is informal and dependent on owners or senior staff", "friction": "Manual conversion of processes into learning materials", "useCases": "Convert SOPs into training guides, quick-reference sheets, role instructions, and quiz/check questions", "baseline": "SOPs, docs, LMS, shared drive", "kpis": "Training time; completion rate; support questions; process adherence", "notes": "Useful for sustainment after the pilot", "score": 82, "value": 3.5, "complexity": 1.5, "readiness": 4.0, "risk": 1.0, "guidance": "Tier 1 default / strong first-cohort fit", "stack": "Google/Microsoft/Canva/LMS/ChatGPT/Claude", "guardrails": "Review with process owner and update as workflow changes" },
+    { "lane": "Operations and Process Reliability", "workflow": "File and knowledge organization", "outcome": "Improve findability and source-of-truth discipline", "pain": "Files are hard to locate; duplicate versions create confusion", "friction": "Information architecture is informal or inconsistent", "useCases": "Create naming conventions, folder structures, document inventories, and source-of-truth maps", "baseline": "Google Drive, SharePoint, Dropbox, Notion", "kpis": "Search time; duplicate files reduced; source-of-truth adoption", "notes": "Useful foundation before knowledge-heavy AI workflows", "score": 74, "value": 3.0, "complexity": 2.0, "readiness": 3.5, "risk": 1.0, "guidance": "Tier 1 or Tier 2 with SME review", "stack": "Google/Microsoft/Notion/ChatGPT/Claude", "guardrails": "Assign ownership and update cadence" },
+    { "lane": "Insights and Decision Support", "workflow": "Weekly KPI digest", "outcome": "Help owners act on business data faster", "pain": "Reports exist but are underused or too hard to interpret", "friction": "Data is spread across dashboards, exports, and spreadsheets", "useCases": "Turn dashboard exports or spreadsheets into plain-English weekly performance summaries", "baseline": "Spreadsheet, BI dashboard, accounting export, CRM export", "kpis": "Reporting frequency; decision cycle time; action completion", "notes": "Good bridge case when data is already accessible", "score": 71, "value": 4.0, "complexity": 3.0, "readiness": 3.0, "risk": 2.0, "guidance": "Tier 2 selective / use with controls", "stack": "Google Sheets/Microsoft Excel/CRM/QuickBooks/ChatGPT/Claude", "guardrails": "Reference source data and avoid unsupported recommendations" },
+    { "lane": "Insights and Decision Support", "workflow": "Dashboard interpretation", "outcome": "Explain trends, anomalies, and likely drivers", "pain": "Owners see metrics but lack time or confidence to interpret them", "friction": "Manual review of charts and exports without consistent commentary", "useCases": "Explain trends, anomalies, changes, and likely drivers from sales, marketing, finance, or ops dashboards", "baseline": "CRM dashboard, Shopify analytics, QuickBooks, spreadsheet, BI tool", "kpis": "Insight cycle time; actions identified; reporting adoption", "notes": "Selective if data source is clear and trusted", "score": 71, "value": 4.0, "complexity": 3.0, "readiness": 3.0, "risk": 2.0, "guidance": "Tier 2 selective / use with controls", "stack": "Excel/Sheets/Shopify/HubSpot/QuickBooks/ChatGPT/Claude", "guardrails": "Keep human decision-maker; require source references" },
+    { "lane": "Insights and Decision Support", "workflow": "Campaign performance analysis", "outcome": "Improve marketing decisions from actual results", "pain": "Campaign results are not converted into next actions", "friction": "Metrics are reviewed inconsistently across channels", "useCases": "Summarize results, compare channels, identify best segments, and suggest next tests", "baseline": "Email platform, CRM, web analytics, Shopify, spreadsheet", "kpis": "Next tests created; campaign ROI; decision speed; learning velocity", "notes": "Strong fit for data-ready marketing teams", "score": 74, "value": 3.5, "complexity": 2.0, "readiness": 3.5, "risk": 2.0, "guidance": "Tier 2 selective / use with controls", "stack": "HubSpot/Shopify/Google Analytics/Sheets/ChatGPT/Claude", "guardrails": "Avoid overclaiming causality from weak data" },
+    { "lane": "Insights and Decision Support", "workflow": "Customer feedback analysis", "outcome": "Find patterns in reviews, surveys, and support messages", "pain": "Feedback exists but is not synthesized into action", "friction": "Qualitative data is scattered across reviews, tickets, calls, and surveys", "useCases": "Analyze reviews, surveys, support tickets, call notes, or emails to identify recurring themes and pain points", "baseline": "Review platforms, help desk, CRM, surveys, inbox", "kpis": "Themes identified; support/product actions; response time; CSAT movement", "notes": "Good fit if data can be de-identified or reviewed safely", "score": 78, "value": 4.0, "complexity": 2.0, "readiness": 3.5, "risk": 2.0, "guidance": "Tier 1 or Tier 2 with SME review", "stack": "HubSpot/Zendesk/Google/ChatGPT/Claude", "guardrails": "De-identify sensitive customer data where possible" },
+    { "lane": "Insights and Decision Support", "workflow": "Sales pipeline insight", "outcome": "Improve visibility into pipeline health and follow-up gaps", "pain": "Stalled deals and follow-up gaps are hard to spot", "friction": "CRM data exists but is not reviewed consistently", "useCases": "Summarize pipeline movement, stalled deals, lead sources, conversion patterns, and follow-up gaps", "baseline": "CRM, spreadsheet, sales dashboard", "kpis": "Pipeline hygiene; stalled deal count; follow-up completion; forecast confidence", "notes": "Useful where CRM hygiene is strong enough", "score": 67, "value": 4.0, "complexity": 3.0, "readiness": 3.0, "risk": 3.0, "guidance": "Tier 2 selective / use with controls", "stack": "HubSpot/Salesforce/Excel/Sheets/ChatGPT/Claude", "guardrails": "Do not automate deal decisions; review assumptions" },
+    { "lane": "Insights and Decision Support", "workflow": "Cash-flow scenario summary", "outcome": "Improve financial planning and resilience", "pain": "Cash-flow surprises create stress; planning is reactive", "friction": "Forecasting is manual or absent", "useCases": "Create plain-English summaries of cash-flow scenarios, receivables, payables, and short-term risks", "baseline": "QuickBooks, accounting data, spreadsheet, invoicing data", "kpis": "Planning cadence; forecast visibility; cash risk flagged; DSO movement", "notes": "Valuable but sensitive; selective only", "score": 63, "value": 4.0, "complexity": 3.0, "readiness": 3.0, "risk": 4.0, "guidance": "Tier 3 advanced clinic / data-dependent", "stack": "QuickBooks/Excel/Sheets/ChatGPT/Claude", "guardrails": "Financial owner/accountant review required" },
+    { "lane": "Insights and Decision Support", "workflow": "AR aging insight", "outcome": "Prioritize receivables follow-up and collections work", "pain": "Overdue invoices are reviewed inconsistently", "friction": "Manual aging review and follow-up prioritization", "useCases": "Summarize overdue invoices, customer payment patterns, collection priorities, and follow-up categories", "baseline": "QuickBooks, accounting system, spreadsheet", "kpis": "DSO; overdue balance; follow-up completion; cash collected", "notes": "Selective finance-adjacent insight workflow", "score": 72, "value": 4.0, "complexity": 2.5, "readiness": 3.5, "risk": 3.0, "guidance": "Tier 2 selective / use with controls", "stack": "QuickBooks/Excel/Sheets/ChatGPT/Claude", "guardrails": "Review customer context and financial facts before action" },
+    { "lane": "Insights and Decision Support", "workflow": "Inventory and demand insight", "outcome": "Reduce stockouts, overordering, and manual planning", "pain": "Inventory decisions rely on intuition; data is fragmented", "friction": "Forecasting needs multiple data sources and exception handling", "useCases": "Summarize product demand, stockout patterns, seasonal trends, reorder risks, and sales velocity", "baseline": "POS, Shopify, inventory tool, spreadsheet", "kpis": "Stockout rate; excess inventory; forecast variance; reorder accuracy", "notes": "Usually too data-dependent for default first cohort", "score": 58, "value": 4.0, "complexity": 4.0, "readiness": 2.0, "risk": 3.0, "guidance": "Tier 3 advanced clinic / data-dependent", "stack": "Shopify/POS/Inventory tool/Excel/Sheets/ChatGPT/Claude", "guardrails": "Human review before purchasing or inventory commitments" },
+    { "lane": "Insights and Decision Support", "workflow": "Market and customer research synthesis", "outcome": "Support strategy with faster external and internal research", "pain": "Owners lack time to synthesize market and customer signals", "friction": "Research and customer signals are fragmented", "useCases": "Summarize segments, competitor positioning, market signals, and opportunity areas", "baseline": "Web research, reviews, CRM notes, survey data", "kpis": "Research time saved; decision confidence; opportunity list created", "notes": "Useful for planning but not always measurable in 12 weeks", "score": 68, "value": 3.0, "complexity": 2.0, "readiness": 3.0, "risk": 2.0, "guidance": "Tier 2 selective / use with controls", "stack": "Google/ChatGPT/Claude/research tools", "guardrails": "Cite sources and verify claims" },
+    { "lane": "Insights and Decision Support", "workflow": "Board or advisor update memo", "outcome": "Improve communication of business performance and decisions", "pain": "Updates are inconsistent or take too long to prepare", "friction": "Manual synthesis of KPIs, risks, and operating notes", "useCases": "Convert KPI data and operating notes into a monthly business update, risks section, and decision list", "baseline": "Spreadsheet, CRM, accounting export, project notes", "kpis": "Prep time saved; update cadence; decision clarity; advisor engagement", "notes": "Good for more mature SMB operators", "score": 74, "value": 3.5, "complexity": 2.0, "readiness": 3.5, "risk": 2.0, "guidance": "Tier 2 selective / use with controls", "stack": "Google/Microsoft/Excel/Sheets/ChatGPT/Claude", "guardrails": "Review financials, strategy claims, and sensitive details" },
+    { "lane": "Insights and Decision Support", "workflow": "Data quality audit", "outcome": "Identify reporting gaps before advanced AI use", "pain": "Data is incomplete, duplicated, or inconsistent", "friction": "Reporting issues are hidden until analysis fails", "useCases": "Identify missing fields, inconsistent tracking, duplicate records, unclear sources of truth, and reporting gaps", "baseline": "CRM, spreadsheet, QuickBooks, Shopify, BI tool", "kpis": "Data completeness; duplicate reduction; source-of-truth clarity; audit findings resolved", "notes": "Important prerequisite for data-heavy workflows", "score": 68, "value": 3.5, "complexity": 3.0, "readiness": 3.0, "risk": 2.0, "guidance": "Tier 2 selective / use with controls", "stack": "Excel/Sheets/CRM/QuickBooks/Shopify/ChatGPT/Claude", "guardrails": "Do not infer missing facts; document data limitations" },
+    { "lane": "Insights and Decision Support", "workflow": "Staffing or workload forecast", "outcome": "Support planning around capacity and service volume", "pain": "Staffing decisions rely on intuition and reactive scheduling", "friction": "Workload data is fragmented or informal", "useCases": "Summarize workload patterns, service volume, scheduling pressure, and staffing pinch points", "baseline": "Scheduling tool, CRM, time tracking, spreadsheet", "kpis": "Forecast accuracy; overtime; service backlog; staffing decisions", "notes": "Advanced and data-dependent", "score": 54, "value": 3.5, "complexity": 4.0, "readiness": 2.0, "risk": 3.0, "guidance": "Tier 3 advanced clinic / data-dependent", "stack": "Excel/Sheets/Scheduling tool/ChatGPT/Claude", "guardrails": "Human management review; avoid automated employment decisions" },
+    { "lane": "OUT OF SCOPE", "workflow": "High-risk financial or regulated decision automation", "outcome": "Automate sensitive decisions", "pain": "Interest in automating approvals or decisions touching sensitive data", "friction": "High exposure with unclear controls or auditability", "useCases": "Autonomous credit, payment, legal, hiring, insurance, tax, or regulated decisions", "baseline": "Accounting, HR, legal, regulated systems", "kpis": "N/A", "notes": "Exclude unless a separate governance-heavy program exists", "score": 50, "value": 4.0, "complexity": 4.0, "readiness": 2.0, "risk": 5.0, "guidance": "Exclude from default cohort", "stack": "None - out of scope", "guardrails": "Do not pilot in default cohort" },
+    { "lane": "OUT OF SCOPE", "workflow": "Autonomous customer-facing bot with no reviewer", "outcome": "Reduce service workload through full automation", "pain": "Teams want 24/7 coverage but lack governance and QA", "friction": "High autonomy in live customer interactions", "useCases": "Full autonomous chat or messaging without approval, escalation, or monitoring", "baseline": "Help desk, chatbot platform, website chat", "kpis": "N/A", "notes": "Too much reputational and quality risk for initial pilot", "score": 47, "value": 3.0, "complexity": 3.0, "readiness": 2.0, "risk": 5.0, "guidance": "Exclude from default cohort", "stack": "None - out of scope", "guardrails": "Human review/escalation required before any customer automation" },
+    { "lane": "OUT OF SCOPE", "workflow": "Unreviewed agentic action across systems", "outcome": "Execute multi-step work without human approval", "pain": "Interest in agents that change records, send messages, or trigger transactions independently", "friction": "High autonomy across multiple systems with unclear rollback or auditability", "useCases": "Agents that update CRM, send emails, create invoices, change inventory, or trigger workflows without approval", "baseline": "CRM, email, accounting, ecommerce, automation tools", "kpis": "N/A", "notes": "Defer until workflow, permissions, logs, and approval gates are mature", "score": 46, "value": 4.0, "complexity": 5.0, "readiness": 2.0, "risk": 5.0, "guidance": "Exclude from default cohort", "stack": "None - out of scope", "guardrails": "Require explicit approval gates, logs, and rollback path" }
+  ],
+  "lanes": [
+    { "lane": "Growth, Content, and Demand", "value": 3.75, "readiness": 3.65, "complexity": 1.75, "risk": 1.75, "score": 82, "role": "Standing Group A / Tier 1 default", "why": "Broad SMB demand signal; strong low-risk content and campaign use cases; clear measurable outputs.", "sme": "Growth marketing, lifecycle, ecommerce retention, content systems", "contentFit": "Google, OpenAI, Anthropic, Shopify, HubSpot, Canva" },
+    { "lane": "Revenue Response and Client Conversion", "value": 4.1, "readiness": 3.65, "complexity": 2.15, "risk": 2.35, "score": 78, "role": "Standing Group B / Tier 1 default", "why": "Strong revenue linkage through lead response, proposals, CRM hygiene, and customer communication.", "sme": "Revenue ops, sales enablement, customer success, CRM process", "contentFit": "Microsoft, OpenAI, Anthropic, HubSpot, Square, Google" },
+    { "lane": "Operations and Process Reliability", "value": 3.4, "readiness": 3.7, "complexity": 1.9, "risk": 1.9, "score": 78, "role": "Standing Group C / Tier 1 with finance controls", "why": "Strong implementation value through SOPs, documentation, admin summaries, and repeatable internal workflows.", "sme": "Business ops, finance ops, SOP/process improvement", "contentFit": "Microsoft, Google, Anthropic, Intuit, Zapier" },
+    { "lane": "Insights and Decision Support", "value": 3.65, "readiness": 2.9, "complexity": 3.0, "risk": 2.7, "score": 67, "role": "Selective clinic / Tier 2-3", "why": "Strategically useful, but data quality, source-of-truth clarity, and sensitivity determine fit.", "sme": "Business analytics, ops analytics, finance planning, lightweight BI", "contentFit": "Google, Microsoft, AWS, Shopify, HubSpot, Intuit" },
+    { "lane": "OUT OF SCOPE", "value": 3.7, "readiness": 2.0, "complexity": 4.0, "risk": 5.0, "score": 48, "role": "Exclude from default cohort", "why": "Autonomous or sensitive decisioning creates governance, reputation, compliance, and quality risk beyond first-cohort scope.", "sme": "N/A", "contentFit": "N/A" }
+  ]
+};
 
 const participantSteps = [
   {
@@ -310,18 +362,17 @@ async function loadTaxonomyData() {
     const response = await fetch("./taxonomy.json");
     if (!response.ok) throw new Error(`Taxonomy request failed: ${response.status}`);
     taxonomyData = await response.json();
-    if (!state.selectedTaxonomyLane) {
-      state.selectedTaxonomyLane = fieldValue("workflowLane") || taxonomyData.lanes?.[0]?.lane || "";
-    }
-    if (!state.selectedTaxonomyWorkflow) {
-      const first = workflowsForLane(state.selectedTaxonomyLane)[0] || taxonomyData.workflows?.[0];
-      state.selectedTaxonomyWorkflow = first?.workflow || "";
-    }
-    saveState();
-  } catch (error) {
-    console.warn("Taxonomy data unavailable", error);
-    taxonomyData = { workflows: [], lanes: [], formula: "" };
+  } catch {
+    taxonomyData = TAXONOMY_FALLBACK;
   }
+  if (!state.selectedTaxonomyLane) {
+    state.selectedTaxonomyLane = fieldValue("workflowLane") || taxonomyData.lanes?.[0]?.lane || "";
+  }
+  if (!state.selectedTaxonomyWorkflow) {
+    const first = workflowsForLane(state.selectedTaxonomyLane)[0] || taxonomyData.workflows?.[0];
+    state.selectedTaxonomyWorkflow = first?.workflow || "";
+  }
+  saveState();
 }
 
 function workflowsForLane(lane) {
@@ -345,146 +396,11 @@ function selectedLaneSummary(lane) {
   return taxonomyData.lanes.find((item) => item.lane === lane);
 }
 
-const workflowFitQuestions = [
-  {
-    key: "objective",
-    label: "What improvement matters most?",
-    options: [
-      ["", "Select one"],
-      ["demand", "Create more demand or marketing output"],
-      ["revenue", "Respond to leads and convert customers faster"],
-      ["operations", "Make internal work more repeatable"],
-      ["insights", "Make decisions with better reporting or visibility"],
-    ],
-  },
-  {
-    key: "systems",
-    label: "Where does the work live today?",
-    options: [
-      ["", "Select one"],
-      ["content", "Docs, website, email, social, or marketing tools"],
-      ["crm", "CRM, email, SMS, forms, or sales notes"],
-      ["ops", "Project tools, shared files, SOPs, scheduling, invoices"],
-      ["data", "Spreadsheets, reports, dashboards, analytics, finance data"],
-      ["manual", "Mostly manual or in people's heads"],
-    ],
-  },
-  {
-    key: "dataAccess",
-    label: "How easy is the information to access?",
-    options: [
-      ["", "Select one"],
-      ["easy", "Easy: organized and easy to find"],
-      ["some", "Somewhat easy: exists but takes time"],
-      ["hard", "Difficult: spread across tools or people"],
-      ["head", "Mostly in someone's head"],
-    ],
-  },
-  {
-    key: "reviewer",
-    label: "Who can review AI output?",
-    options: [
-      ["", "Select one"],
-      ["named", "Named owner or department lead"],
-      ["team", "Customer-facing or operations team member"],
-      ["external", "External advisor or consultant"],
-      ["none", "No reviewer identified yet"],
-    ],
-  },
-  {
-    key: "risk",
-    label: "What is the highest-risk output?",
-    options: [
-      ["", "Select one"],
-      ["low", "Internal draft, summary, or content"],
-      ["customer", "Customer-facing message or proposal"],
-      ["financial", "Pricing, financial, private, or contractual info"],
-      ["regulated", "Legal, medical, hiring, safety, or autonomous decisioning"],
-    ],
-  },
-  {
-    key: "change",
-    label: "How much team behavior must change?",
-    options: [
-      ["", "Select one"],
-      ["little", "Very little"],
-      ["some", "Some habits or steps"],
-      ["several", "Several roles, handoffs, or tools"],
-      ["major", "Major change across the team"],
-    ],
-  },
-];
-
 function priorityBand(score) {
   if (score >= 80) return "Default first-cohort";
   if (score >= 65) return "Selective first-cohort";
   if (score >= 50) return "Clinic / later cohort";
   return "Exclude by default";
-}
-
-function laneFromAnswers(answers = state.workflowFitAnswers || {}) {
-  const objectiveMap = {
-    demand: "Growth, Content, and Demand",
-    revenue: "Revenue Response and Client Conversion",
-    operations: "Operations and Process Reliability",
-    insights: "Insights and Decision Support",
-  };
-  const systemMap = {
-    content: "Growth, Content, and Demand",
-    crm: "Revenue Response and Client Conversion",
-    ops: "Operations and Process Reliability",
-    data: "Insights and Decision Support",
-  };
-  return objectiveMap[answers.objective] || systemMap[answers.systems] || state.selectedTaxonomyLane || "";
-}
-
-function fitPenalty(item, answers = state.workflowFitAnswers || {}) {
-  let penalty = 0;
-  if (answers.dataAccess === "hard") penalty += item.readiness < 3.5 ? 8 : 3;
-  if (answers.dataAccess === "head") penalty += item.readiness < 4 ? 14 : 6;
-  if (answers.reviewer === "none") penalty += item.risk >= 3 ? 18 : 8;
-  if (answers.risk === "customer") penalty += item.risk >= 3.5 ? 10 : 0;
-  if (answers.risk === "financial") penalty += item.risk >= 3 ? 16 : 6;
-  if (answers.risk === "regulated") penalty += 40;
-  if (answers.change === "several") penalty += item.complexity >= 3 ? 10 : 3;
-  if (answers.change === "major") penalty += item.complexity >= 2.5 ? 18 : 8;
-  if (answers.systems === "manual") penalty += item.complexity >= 3 ? 12 : 4;
-  return penalty;
-}
-
-function workflowFitScore(item, answers = state.workflowFitAnswers || {}) {
-  const targetLane = laneFromAnswers(answers);
-  let boost = item.lane === targetLane ? 12 : 0;
-  if (answers.dataAccess === "easy" && item.readiness >= 4) boost += 4;
-  if (answers.reviewer && answers.reviewer !== "none" && item.risk <= 2.5) boost += 3;
-  if (answers.change === "little" && item.complexity <= 2) boost += 4;
-  if (answers.systems === "crm" && /CRM|email|SMS|forms/i.test(item.baseline + " " + item.stack)) boost += 4;
-  if (answers.systems === "content" && /CMS|email|social|Canva|Shopify|website/i.test(item.baseline + " " + item.stack)) boost += 4;
-  if (answers.systems === "ops" && /project|shared|SOP|invoice|scheduling|docs/i.test(item.baseline + " " + item.workflow)) boost += 4;
-  if (answers.systems === "data" && /spreadsheet|dashboard|analytics|report|finance/i.test(item.baseline + " " + item.workflow)) boost += 4;
-  return Math.min(100, Math.max(0, Math.round(item.score + boost - fitPenalty(item, answers))));
-}
-
-function workflowFitRecommendation() {
-  const answers = state.workflowFitAnswers || {};
-  if (!Object.values(answers).some(Boolean)) return null;
-  return taxonomyData.workflows
-    .filter((item) => item.lane !== "OUT OF SCOPE")
-    .map((item) => ({ ...item, fitScore: workflowFitScore(item, answers) }))
-    .sort((a, b) => b.fitScore - a.fitScore || b.score - a.score || a.complexity - b.complexity)[0];
-}
-
-function assignmentExplainerFor(item = selectedTaxonomyWorkflow()) {
-  if (!item) return [];
-  return [
-    ["Workflow Brief", `Define the exact ${item.workflow} process, owner, reviewer, input, output, and baseline metric. This keeps the pilot focused on one workflow instead of a broad AI idea.`],
-    ["Data Boundary", `List the systems and source material that support this workflow: ${item.baseline}. Also name what is off-limits before sandbox testing.`],
-    ["Test Packet", `Build three messy scenarios from the pain pattern: ${item.pain}. Include edge cases and stop conditions.`],
-    ["Assistant", `Turn the representative AI use into instructions: ${item.useCases}. The assistant should support the work, not make final decisions.`],
-    ["Review Rubric", `Use these guardrails as the first review standard: ${item.guardrails}. Add accuracy, completeness, tone, and escalation checks.`],
-    ["Risk Controls", `Score risk at ${item.risk}/5 and complexity at ${item.complexity}/5. If the output touches customers, pricing, private data, or compliance, require human approval.`],
-    ["Pilot Launch", `Measure value with: ${item.kpis}. Keep the pilot small enough to run within normal SMB capacity.`],
-  ];
 }
 
 function applyTaxonomyWorkflow(item) {
@@ -503,8 +419,14 @@ function applyTaxonomyWorkflow(item) {
   });
   syncParticipantStep();
   saveState();
-  bindGlobalInputs();
+  syncInputValues();
   renderAll();
+}
+
+function syncInputValues() {
+  document.querySelectorAll("[data-state]").forEach((el) => {
+    el.value = fieldValue(el.dataset.state);
+  });
 }
 
 function bindGlobalInputs() {
@@ -532,6 +454,8 @@ function renderDashboard() {
   document.getElementById("artifactCount").textContent = `${artifactsDone}/${assignments.length}`;
   const gateText = gateScore() >= 7 ? "Week 6 gate ready" : gateScore() >= 5 ? "Week 3 gate likely" : "Week 3 gate pending";
   document.getElementById("gateStatus").textContent = gateText;
+  const weekMap = [1, 2, 3, 3, 4, 5, 6, 6];
+  document.getElementById("currentWeek").textContent = weekMap[Math.min(state.participantStep, weekMap.length - 1)] || 1;
   document.getElementById("workflowCardStatus").textContent = complete("workflowName") && complete("businessGoal") ? "Drafted" : "Incomplete";
   document.getElementById("dataStatus").textContent = complete("allowedData") && complete("blockedData") ? "Defined" : "Incomplete";
   document.getElementById("testStatus").textContent = complete("testCase1") && complete("testCase2") && complete("testCase3") ? "Ready" : "Incomplete";
@@ -554,8 +478,6 @@ function renderDashboard() {
 function renderTaxonomySimulator() {
   const laneSelect = document.getElementById("taxonomyLane");
   const workflowSelect = document.getElementById("taxonomyWorkflow");
-  const fitTest = document.getElementById("workflowFitTest");
-  const explainer = document.getElementById("assignmentExplainer");
   const detail = document.getElementById("taxonomyDetail");
   const shortlist = document.getElementById("taxonomyShortlist");
   const band = document.getElementById("taxonomyBand");
@@ -563,8 +485,6 @@ function renderTaxonomySimulator() {
 
   if (!taxonomyData.workflows.length) {
     band.textContent = "Unavailable";
-    if (fitTest) fitTest.innerHTML = "";
-    if (explainer) explainer.innerHTML = "";
     detail.innerHTML = `<div class="taxonomy-empty">Taxonomy data could not be loaded.</div>`;
     shortlist.innerHTML = "";
     return;
@@ -604,8 +524,6 @@ function renderTaxonomySimulator() {
   const item = selectedTaxonomyWorkflow();
   const lane = selectedLaneSummary(item?.lane);
   if (!item) return;
-  renderWorkflowFitTest(fitTest);
-  renderAssignmentExplainer(explainer, item);
   const scoreBand = priorityBand(item.score);
   band.textContent = scoreBand;
   detail.innerHTML = `
@@ -658,84 +576,6 @@ function renderTaxonomySimulator() {
       renderAll();
     };
   });
-}
-
-function renderWorkflowFitTest(container) {
-  if (!container) return;
-  const recommendation = workflowFitRecommendation();
-  const answers = state.workflowFitAnswers || {};
-  const answered = Object.values(answers).filter(Boolean).length;
-  container.innerHTML = `
-    <div class="fit-test-head">
-      <div>
-        <span>Workflow Fit Test</span>
-        <strong>Answer six questions to get a recommended workflow.</strong>
-      </div>
-      <div class="fit-test-status">${answered}/${workflowFitQuestions.length} answered</div>
-    </div>
-    <div class="fit-test-grid">
-      ${workflowFitQuestions.map((question) => `
-        <label>${escapeHtml(question.label)}
-          <select data-fit-question="${escapeHtml(question.key)}">
-            ${question.options.map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join("")}
-          </select>
-        </label>
-      `).join("")}
-    </div>
-    <div class="fit-result ${recommendation ? "" : "empty"}">
-      ${recommendation ? `
-        <div>
-          <span>Recommended workflow</span>
-          <strong>${escapeHtml(recommendation.workflow)}</strong>
-          <p>${escapeHtml(recommendation.lane)} · Fit ${recommendation.fitScore} · Taxonomy ${recommendation.score}</p>
-        </div>
-        <button id="useRecommendationBtn" class="icon-btn" type="button"><i data-lucide="sparkles"></i><span>Use Recommendation</span></button>
-      ` : `
-        <div>
-          <span>Recommended workflow</span>
-          <strong>Complete the test to generate a recommendation.</strong>
-          <p>The test uses lane fit, data access, review capacity, risk, and change burden on top of the Week 3 taxonomy score.</p>
-        </div>
-      `}
-    </div>
-  `;
-  container.querySelectorAll("[data-fit-question]").forEach((select) => {
-    select.value = answers[select.dataset.fitQuestion] || "";
-    select.onchange = (event) => {
-      state.workflowFitAnswers = { ...(state.workflowFitAnswers || {}), [event.target.dataset.fitQuestion]: event.target.value };
-      const next = workflowFitRecommendation();
-      if (next) {
-        state.recommendedTaxonomyWorkflow = next.workflow;
-        state.selectedTaxonomyLane = next.lane;
-        state.selectedTaxonomyWorkflow = next.workflow;
-      }
-      saveState();
-      renderAll();
-    };
-  });
-  const useButton = document.getElementById("useRecommendationBtn");
-  if (useButton && recommendation) {
-    useButton.onclick = () => applyTaxonomyWorkflow(recommendation);
-  }
-}
-
-function renderAssignmentExplainer(container, item) {
-  if (!container || !item) return;
-  const explainers = assignmentExplainerFor(item);
-  container.innerHTML = `
-    <div class="assignment-explainer-head">
-      <span>Assignment Explainer</span>
-      <strong>What this participant needs to complete for ${escapeHtml(item.workflow)}</strong>
-    </div>
-    <div class="assignment-explainer-grid">
-      ${explainers.map(([title, body]) => `
-        <div class="assignment-explainer-item">
-          <strong>${escapeHtml(title)}</strong>
-          <p>${escapeHtml(body)}</p>
-        </div>
-      `).join("")}
-    </div>
-  `;
 }
 
 function renderJourney() {
@@ -819,19 +659,11 @@ function renderAssignmentTabs() {
 function renderAssignmentForm() {
   const assignment = assignments.find((item) => item.id === state.activeAssignment) || assignments[0];
   const progress = assignmentProgress(assignment);
-  const taxonomyItem = selectedTaxonomyWorkflow();
-  const explainer = assignmentExplainerFor(taxonomyItem).find(([title]) => assignment.label.includes(title) || title.includes(assignment.label));
   const wrap = document.getElementById("assignmentForm");
   wrap.innerHTML = "";
   const section = document.createElement("section");
   section.className = "form-section";
   section.innerHTML = `<h3>${assignment.title}<span>${progress.count}/${progress.total} complete</span></h3>`;
-  if (explainer) {
-    const explain = document.createElement("div");
-    explain.className = "inline-assignment-explainer";
-    explain.innerHTML = `<strong>${escapeHtml(explainer[0])}</strong><p>${escapeHtml(explainer[1])}</p>`;
-    section.appendChild(explain);
-  }
   const body = document.createElement("div");
   body.className = "form-section-body";
   assignment.fields.forEach(([key, label, placeholder, type]) => {
@@ -1168,7 +1000,7 @@ function loadSample() {
   });
   syncParticipantStep();
   saveState();
-  bindGlobalInputs();
+  syncInputValues();
   renderAll();
 }
 
@@ -1197,7 +1029,7 @@ async function init() {
     localStorage.removeItem("verizonPlatformState");
     Object.keys(state).forEach((key) => delete state[key]);
     Object.assign(state, initialState);
-    bindGlobalInputs();
+    syncInputValues();
     renderAll();
   });
   document.getElementById("generatePlanBtn").addEventListener("click", () => {
