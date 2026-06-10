@@ -102,11 +102,14 @@ const initialState = {
   activeBuilder: "assistant",
   participantStep: 0,
   activeScenario: "testCase1",
+  selectedTaxonomyLane: "",
+  selectedTaxonomyWorkflow: "",
   runCount: 0,
   runLog: [],
 };
 
 const state = loadState();
+let taxonomyData = { workflows: [], lanes: [], formula: "" };
 
 const participantSteps = [
   {
@@ -204,6 +207,15 @@ function fieldValue(key) {
   return state[key] || "";
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function setState(key, value) {
   state[key] = value;
   syncParticipantStep();
@@ -284,6 +296,73 @@ function continueParticipant() {
   renderAll();
 }
 
+async function loadTaxonomyData() {
+  try {
+    const response = await fetch("./taxonomy.json");
+    if (!response.ok) throw new Error(`Taxonomy request failed: ${response.status}`);
+    taxonomyData = await response.json();
+    if (!state.selectedTaxonomyLane) {
+      state.selectedTaxonomyLane = fieldValue("workflowLane") || taxonomyData.lanes?.[0]?.lane || "";
+    }
+    if (!state.selectedTaxonomyWorkflow) {
+      const first = workflowsForLane(state.selectedTaxonomyLane)[0] || taxonomyData.workflows?.[0];
+      state.selectedTaxonomyWorkflow = first?.workflow || "";
+    }
+    saveState();
+  } catch (error) {
+    console.warn("Taxonomy data unavailable", error);
+    taxonomyData = { workflows: [], lanes: [], formula: "" };
+  }
+}
+
+function workflowsForLane(lane) {
+  return taxonomyData.workflows
+    .filter((item) => item.lane === lane)
+    .sort((a, b) => b.score - a.score || b.value - a.value || a.complexity - b.complexity);
+}
+
+function selectedTaxonomyWorkflow() {
+  const byName = taxonomyData.workflows.find((item) => item.workflow === state.selectedTaxonomyWorkflow);
+  if (byName) return byName;
+  const first = workflowsForLane(state.selectedTaxonomyLane)[0] || taxonomyData.workflows[0];
+  if (first) {
+    state.selectedTaxonomyLane = first.lane;
+    state.selectedTaxonomyWorkflow = first.workflow;
+  }
+  return first;
+}
+
+function selectedLaneSummary(lane) {
+  return taxonomyData.lanes.find((item) => item.lane === lane);
+}
+
+function priorityBand(score) {
+  if (score >= 80) return "Default first-cohort";
+  if (score >= 65) return "Selective first-cohort";
+  if (score >= 50) return "Clinic / later cohort";
+  return "Exclude by default";
+}
+
+function applyTaxonomyWorkflow(item) {
+  if (!item) return;
+  Object.assign(state, {
+    selectedTaxonomyLane: item.lane,
+    selectedTaxonomyWorkflow: item.workflow,
+    workflowLane: item.lane,
+    workflowName: item.workflow,
+    businessGoal: state.businessGoal || item.outcome,
+    workflowInput: state.workflowInput || item.baseline,
+    workflowOutput: state.workflowOutput || item.useCases,
+    baselineMetric: state.baselineMetric || item.kpis,
+    systemOfRecord: state.systemOfRecord || item.baseline,
+    stopConditions: state.stopConditions || item.guardrails,
+  });
+  syncParticipantStep();
+  saveState();
+  bindGlobalInputs();
+  renderAll();
+}
+
 function bindGlobalInputs() {
   document.querySelectorAll("[data-state]").forEach((el) => {
     el.value = fieldValue(el.dataset.state);
@@ -323,8 +402,112 @@ function renderDashboard() {
     item.innerHTML = `<span class="gate-check"></span><div><strong>${name}</strong><span>${description}</span></div>`;
     gateList.appendChild(item);
   });
+  renderTaxonomySimulator();
   renderJourney();
   renderParticipantGuide();
+}
+
+function renderTaxonomySimulator() {
+  const laneSelect = document.getElementById("taxonomyLane");
+  const workflowSelect = document.getElementById("taxonomyWorkflow");
+  const detail = document.getElementById("taxonomyDetail");
+  const shortlist = document.getElementById("taxonomyShortlist");
+  const band = document.getElementById("taxonomyBand");
+  if (!laneSelect || !workflowSelect || !detail || !shortlist || !band) return;
+
+  if (!taxonomyData.workflows.length) {
+    band.textContent = "Unavailable";
+    detail.innerHTML = `<div class="taxonomy-empty">Taxonomy data could not be loaded.</div>`;
+    shortlist.innerHTML = "";
+    return;
+  }
+
+  const lanes = taxonomyData.lanes.filter((item) => item.lane !== "OUT OF SCOPE");
+  if (!state.selectedTaxonomyLane || !lanes.some((item) => item.lane === state.selectedTaxonomyLane)) {
+    state.selectedTaxonomyLane = fieldValue("workflowLane") || lanes[0]?.lane || "";
+  }
+  const laneWorkflows = workflowsForLane(state.selectedTaxonomyLane);
+  if (!state.selectedTaxonomyWorkflow || !laneWorkflows.some((item) => item.workflow === state.selectedTaxonomyWorkflow)) {
+    state.selectedTaxonomyWorkflow = laneWorkflows[0]?.workflow || "";
+  }
+
+  laneSelect.innerHTML = lanes
+    .map((item) => `<option value="${escapeHtml(item.lane)}">${escapeHtml(item.lane)}</option>`)
+    .join("");
+  laneSelect.value = state.selectedTaxonomyLane;
+  workflowSelect.innerHTML = laneWorkflows
+    .map((item) => `<option value="${escapeHtml(item.workflow)}">${escapeHtml(item.workflow)} (${item.score})</option>`)
+    .join("");
+  workflowSelect.value = state.selectedTaxonomyWorkflow;
+
+  laneSelect.onchange = (event) => {
+    state.selectedTaxonomyLane = event.target.value;
+    const first = workflowsForLane(state.selectedTaxonomyLane)[0];
+    state.selectedTaxonomyWorkflow = first?.workflow || "";
+    saveState();
+    renderAll();
+  };
+  workflowSelect.onchange = (event) => {
+    state.selectedTaxonomyWorkflow = event.target.value;
+    saveState();
+    renderAll();
+  };
+
+  const item = selectedTaxonomyWorkflow();
+  const lane = selectedLaneSummary(item?.lane);
+  if (!item) return;
+  const scoreBand = priorityBand(item.score);
+  band.textContent = scoreBand;
+  detail.innerHTML = `
+    <div class="taxonomy-score-card">
+      <div>
+        <span>Priority score</span>
+        <strong>${item.score}</strong>
+        <em>${escapeHtml(scoreBand)}</em>
+      </div>
+      <div class="taxonomy-metrics">
+        <span>Value ${item.value}</span>
+        <span>Readiness ${item.readiness}</span>
+        <span>Complexity ${item.complexity}</span>
+        <span>Risk ${item.risk}</span>
+      </div>
+    </div>
+    <div class="taxonomy-copy">
+      <div><span>Primary outcome</span><p>${escapeHtml(item.outcome)}</p></div>
+      <div><span>Pain pattern</span><p>${escapeHtml(item.pain)}</p></div>
+      <div><span>Representative AI use</span><p>${escapeHtml(item.useCases)}</p></div>
+      <div><span>Likely system baseline</span><p>${escapeHtml(item.baseline)}</p></div>
+      <div><span>Measurable KPIs</span><p>${escapeHtml(item.kpis)}</p></div>
+      <div><span>Human review / guardrails</span><p>${escapeHtml(item.guardrails)}</p></div>
+    </div>
+    <div class="taxonomy-routing">
+      <div><strong>Cohort guidance</strong><span>${escapeHtml(item.guidance)}</span></div>
+      <div><strong>Stack routing</strong><span>${escapeHtml(item.stack)}</span></div>
+      <div><strong>SME track</strong><span>${escapeHtml(lane?.sme || "Not specified")}</span></div>
+      <div><strong>Lane role</strong><span>${escapeHtml(lane?.role || "Not specified")}</span></div>
+    </div>
+    <button id="applyTaxonomyBtn" class="icon-btn" type="button"><i data-lucide="check-circle-2"></i><span>Use This Workflow</span></button>
+  `;
+  document.getElementById("applyTaxonomyBtn").onclick = () => applyTaxonomyWorkflow(item);
+
+  shortlist.innerHTML = `
+    <h3>Top workflows in this lane</h3>
+    <div class="taxonomy-shortlist-grid">
+      ${laneWorkflows.slice(0, 5).map((workflow) => `
+        <button class="taxonomy-shortlist-item ${workflow.workflow === item.workflow ? "active" : ""}" data-taxonomy-workflow="${escapeHtml(workflow.workflow)}">
+          <strong>${escapeHtml(workflow.workflow)}</strong>
+          <span>${workflow.score} · ${escapeHtml(priorityBand(workflow.score))}</span>
+        </button>
+      `).join("")}
+    </div>
+  `;
+  shortlist.querySelectorAll("[data-taxonomy-workflow]").forEach((button) => {
+    button.onclick = () => {
+      state.selectedTaxonomyWorkflow = button.dataset.taxonomyWorkflow;
+      saveState();
+      renderAll();
+    };
+  });
 }
 
 function renderJourney() {
@@ -743,7 +926,9 @@ function loadSample() {
     teamSize: "14",
     budget: "$250/month",
     workflowLane: "Revenue Response and Client Conversion",
-    workflowName: "Lead follow-up and proposal drafting",
+    workflowName: "Lead follow-up drafting",
+    selectedTaxonomyLane: "Revenue Response and Client Conversion",
+    selectedTaxonomyWorkflow: "Lead follow-up drafting",
   });
   syncParticipantStep();
   saveState();
@@ -764,7 +949,8 @@ function renderAll() {
   if (window.lucide) window.lucide.createIcons();
 }
 
-function init() {
+async function init() {
+  await loadTaxonomyData();
   renderNav();
   bindGlobalInputs();
   renderAll();
